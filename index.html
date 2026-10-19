@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trail Strength</title>
+<style>
+:root{
+  --bg:#0f1216; --panel:#171b21; --panel2:#1d222a; --line:#2a313b;
+  --text:#e8ecf1; --muted:#8a94a3; --accent:#ff7a1a; --rest:#3fb68b; --stretch:#5b8def;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 40px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 22px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--muted);padding:9px 14px}
+.seg button.on{background:var(--accent);color:#111;font-weight:600}
+.chk{display:inline-flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:8px 12px;color:var(--muted);user-select:none}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:22px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;position:relative}
+.card.next{border-color:var(--accent)}
+.badge{position:absolute;top:14px;right:14px;background:var(--accent);color:#111;font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px}
+.card h2{margin:0;font-size:20px}
+.card .tag{color:var(--accent);font-weight:600;font-size:14px}
+.card ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px}
+.card .meta{color:var(--muted);font-size:13px;display:flex;justify-content:space-between}
+.btn{background:var(--accent);color:#111;border:0;border-radius:10px;padding:11px 16px;font-weight:700}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:500}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:14px;color:var(--muted)}
+.note b{color:var(--text)}
+.quote{font-style:italic;color:var(--text);opacity:.85}
+/* player */
+#player .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+#player .top .title{font-weight:700}
+.stage{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+.figbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;align-items:center;justify-content:center;min-height:380px}
+.figbox svg{width:100%;height:auto;max-height:62vh}
+.info{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.chip{align-self:flex-start;font-size:12px;font-weight:800;letter-spacing:.08em;padding:5px 10px;border-radius:20px;background:var(--accent);color:#111}
+.chip.rest{background:var(--rest)} .chip.stretch{background:var(--stretch)} .chip.warm{background:#c9a227}
+.exname{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.15}
+.side{color:var(--accent);font-weight:700;min-height:1.2em}
+.timer{font-size:84px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;margin:4px 0}
+.load{font-size:14px;color:var(--muted)} .load b{color:var(--text)}
+.cues{margin:0;padding-left:20px;font-size:16px}
+.cues li{margin:3px 0}
+.why{font-size:14px;color:var(--muted);border-left:3px solid var(--accent);padding-left:10px;margin:4px 0 0}
+.upnext{font-size:13px;color:var(--muted);margin-top:auto}
+.bar{height:8px;background:var(--panel2);border-radius:8px;overflow:hidden;margin:16px 0 12px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s linear}
+.controls{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.controls .btn{min-width:110px}
+.kbd{color:var(--muted);font-size:12px;text-align:center;margin-top:8px}
+.hidden{display:none!important}
+#done{text-align:center;padding-top:60px}
+#done h1{font-size:40px}
+@media (max-width:860px){.stage{grid-template-columns:1fr}.timer{font-size:64px}.figbox{min-height:260px}}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="wrap">
+  <h1>Trail Strength</h1>
+  <p class="sub">15–20 minute home sessions for arm pump, leg pump and a stronger lower back. Rotate A → B → C, three times a week.</p>
+
+  <div class="row">
+    <div class="seg" id="modeSeg">
+      <button data-mode="0">Weeks 1–2 · Foundation</button>
+      <button data-mode="1">Week 3+ · Progressed</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="barChk"> Pull-up bar available</label>
+    <label class="chk"><input type="checkbox" id="soundChk"> Beeps</label>
+    <label class="chk"><input type="checkbox" id="voiceChk"> Voice</label>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="notes">
+    <div class="note"><b>Choosing weight.</b> Pick a dumbbell where the last 5 seconds are a fight but your form still holds. When it stops feeling like that, go up. Foundation weeks: go light and learn the movement.</div>
+    <div class="note"><b>Before your first session</b>, watch one form video each for the goblet squat, single-leg RDL and bent-over row. The figure shows the movement, not fine form. These three hinge and squat movements are where your lower back is most at risk.</div>
+    <div class="note"><b>Scheduling.</b> Not Session A the night before a big ride. Stop any exercise that causes sharp pain, or pain down a leg — that's a physio question, not a training one.</div>
+  </div>
+  <p class="quote" id="homeQuote" style="margin-top:22px"></p>
+</div>
+
+<!-- PLAYER -->
+<div id="player" class="wrap hidden">
+  <div class="top">
+    <div class="title" id="pTitle"></div>
+    <button class="btn ghost" id="exitBtn">Exit</button>
+  </div>
+  <div class="stage">
+    <div class="figbox"><svg id="fig" viewBox="0 0 400 260" aria-label="Exercise demonstration"></svg></div>
+    <div class="info">
+      <span class="chip" id="pChip">WORK</span>
+      <h2 class="exname" id="pName"></h2>
+      <div class="side" id="pSide"></div>
+      <div class="timer" id="pTimer">0:00</div>
+      <div class="load" id="pLoad"></div>
+      <ul class="cues" id="pCues"></ul>
+      <p class="why" id="pWhy"></p>
+      <p class="quote hidden" id="pQuote"></p>
+      <div class="upnext" id="pNext"></div>
+    </div>
+  </div>
+  <div class="bar"><i id="pBar"></i></div>
+  <div class="controls">
+    <button class="btn ghost" id="backBtn">◀ Back</button>
+    <button class="btn" id="playBtn">Pause</button>
+    <button class="btn ghost" id="skipBtn">Skip ▶</button>
+  </div>
+  <div class="kbd">Space: pause / resume · ← back · → skip · Esc: exit</div>
+</div>
+
+<!-- DONE -->
+<div id="done" class="wrap hidden">
+  <h1>Session done.</h1>
+  <p class="sub" id="doneSub"></p>
+  <p class="quote" id="doneQuote"></p>
+  <p style="margin-top:28px"><button class="btn" id="homeBtn">Back to sessions</button></p>
+</div>
+
+<script>
+/* ================= FIGURE RIG ================= */
+const GROUND = 236, BAR_Y = 24;
+const LEN = {neck:52, sho:46, head:11, headR:10, up:28, fore:26, hand:8, thigh:40, shin:38, foot:13};
+const DEF = {t:180, hd:0, bend:0, shr:0,
+  ua:0, fa:0, ha:0, ua2:0, fa2:0, ha2:0,
+  th:0, sh:0, ft:90, th2:0, sh2:0, ft2:90};
+const PAIRS = [['ua','ua2'],['fa','fa2'],['ha','ha2'],['th','th2'],['sh','sh2'],['ft','ft2']];
+
+// Angles: 0 = straight down, 90 = forward (figure faces right), 180 = straight up, -90 = backward.
+function dir(a){const r=a*Math.PI/180;return [Math.sin(r),Math.cos(r)];}
+function add(p,a,l){const d=dir(a);return [p[0]+d[0]*l,p[1]+d[1]*l];}
+// S: symmetric pose — far limbs copy near unless given; hand follows forearm unless given
+function S(o){const p={...DEF,...o}; if(o.ha===undefined)p.ha=p.fa;
+  for(const [n,f] of PAIRS){ if(o[f]===undefined) p[f]=p[n]; } return p;}
+// M: change a pose symmetrically
+function M(base,o){const p={...base,...o}; if(o.fa!==undefined&&o.ha===undefined)p.ha=o.fa;
+  for(const [n,f] of PAIRS){ if(o[n]!==undefined&&o[f]===undefined) p[f]=p[n]; } return p;}
+
+function solve(p){
+  const hip=[0,0];
+  const neck=add(hip,p.t,LEN.neck), sho=add(hip,p.t,LEN.sho+p.shr), head=add(neck,p.t+p.hd,LEN.head);
+  const elbow=add(sho,p.ua,LEN.up), wrist=add(elbow,p.fa,LEN.fore), hand=add(wrist,p.ha,LEN.hand);
+  const elbow2=add(sho,p.ua2,LEN.up), wrist2=add(elbow2,p.fa2,LEN.fore), hand2=add(wrist2,p.ha2,LEN.hand);
+  const knee=add(hip,p.th,LEN.thigh), ankle=add(knee,p.sh,LEN.shin), toe=add(ankle,p.ft,LEN.foot);
+  const knee2=add(hip,p.th2,LEN.thigh), ankle2=add(knee2,p.sh2,LEN.shin), toe2=add(ankle2,p.ft2,LEN.foot);
+  return {hip,neck,sho,head,elbow,wrist,hand,elbow2,wrist2,hand2,knee,ankle,toe,knee2,ankle2,toe2};
+}
+function lerpPose(a,b,w){const p={};for(const k in DEF)p[k]=a[k]+(b[k]-a[k])*w;return p;}
+
+function placed(ex,time){
+  const A=ex.anim.a,B=ex.anim.b,per=ex.anim.period||3;
+  const ph=(time%per)/per, w=(1-Math.cos(2*Math.PI*ph))/2;
+  const pts=solve(lerpPose(A,B,w));
+  let dy;
+  if(ex.mode==='bar'){ dy=BAR_Y+2-pts.hand[1]; }
+  else { let maxY=-1e9; for(const k in pts){ if(k==='head')continue; maxY=Math.max(maxY,pts[k][1]); } dy=GROUND-maxY; }
+  const dx=ex.pin.x-pts[ex.pin.pt][0];
+  for(const k in pts){pts[k]=[pts[k][0]+dx,pts[k][1]+dy];}
+  return pts;
+}
+
+/* ================= POSES ================= */
+const STAND=S({});
+const QUAD=S({t:106, ua:0, fa:0, ha:90, th:0, sh:-90, ft:-90});
+const SEAT=S({t:145, th:90, sh:0, ft:90, ua:0, fa:90});
+const HANG=S({ua:180, fa:180, ha:180, th:3, sh:-3, ft:40});
+const SUP=S({t:-90, hd:-40});
+
+const EX = {
+  /* warm-ups */
+  march:{name:'March in place', cues:['Drive knees up to hip height','Swing the opposite arm','Stay tall, breathe easy'],
+    why:'Gets blood into your legs before they have to work.',
+    anim:{a:{...STAND, th:75, ua:-30, fa:-10, ha:-10, ua2:40, fa2:70, ha2:70},
+          b:{...STAND, th2:75, ua:40, fa:70, ha:70, ua2:-30, fa2:-10, ha2:-10}, period:1.2}, pin:{pt:'ankle2',x:200}},
+  armSwings:{name:'Arm swings', cues:['Swing both arms forward and up, then back','Soft knees, relaxed neck','Big, easy range — no forcing'],
+    why:'Loosens the shoulders that take every hit through the bars.',
+    anim:{a:M(STAND,{ua:170,fa:170}), b:M(STAND,{ua:-40,fa:-40}), period:2}, pin:{pt:'ankle',x:200}},
+  legSwings:{name:'Leg swings', cues:['Hand on a wall or desk for balance','Swing one leg forward and back, loose','Switch legs halfway'],
+    why:'Opens your hips for a lower, looser attack position.',
+    anim:{a:{...M(STAND,{ua:80,fa:85}), th:50, sh:40, ft:120}, b:{...M(STAND,{ua:80,fa:85}), th:-30, sh:-35, ft:60}, period:1.6},
+    pin:{pt:'ankle2',x:180}, props:['wall']},
+  bwSquat:{name:'Bodyweight squat', cues:['Feet shoulder-width, toes slightly out','Sit hips back and down, chest proud','Push the floor away to stand'],
+    why:'Grooves the same hip and knee bend you use on every descent.',
+    anim:{a:M(STAND,{ua:85,fa:85}), b:M(STAND,{t:145,th:80,sh:-30,ua:85,fa:85}), period:3}, pin:{pt:'ankle',x:210}},
+  hipHinge:{name:'Hip hinge', cues:['Arms crossed on chest, soft knees','Push hips straight back, keep back flat','Stand up by squeezing your glutes'],
+    why:'Teaches your back to stay neutral while your hips do the work — the fix for a spasmy lower back.',
+    anim:{a:M(STAND,{ua:25,fa:150}), b:M(STAND,{t:105,th:12,sh:-10,ua:-50,fa:75}), period:3}, pin:{pt:'ankle',x:220}},
+  wristRolls:{name:'Wrist rolls', cues:['Arms out in front, loose fists','Roll the wrists in slow circles','Switch direction halfway'],
+    why:'Warms up your forearms before the grip work.',
+    anim:{a:M(STAND,{ua:85,fa:85,ha:30}), b:M(STAND,{ua:85,fa:85,ha:150}), period:1.5}, pin:{pt:'ankle',x:180}},
+  catCow:{name:'Cat-cow', cues:['Hands under shoulders, knees under hips','Round your back up, tuck your chin (cat)','Drop your belly, lift chest and gaze (cow)'],
+    why:'Mobilises the spine and calms a tight lower back.',
+    anim:{a:{...QUAD, bend:9, hd:-35}, b:{...QUAD, bend:-7, hd:25}, period:4}, pin:{pt:'knee',x:150}},
+
+  /* Session A */
+  gobletSquat:{name:'Goblet squat', cues:['Hold one dumbbell vertically against your chest','Sit down between your heels, elbows inside knees','Heels down, drive up through mid-foot'],
+    why:'Quad endurance — what stops your legs burning on long descents.', load:['Light, or bodyweight only. Learn the pattern.','Last 5 seconds should be a fight.'],
+    anim:{a:M(STAND,{ua:20,fa:150}), b:M(STAND,{t:145,th:80,sh:-30,ua:50,fa:175}), period:3.5}, pin:{pt:'ankle',x:210}, db:'goblet'},
+  attack:{name:'Attack position hold', cues:['Feet hip-width, knees and hips bent','Chest low, back flat, elbows out','Hold still — breathe through the burn'],
+    why:'This is you on the bike in steep terrain. Train it here so it lasts out there.', load:['Bodyweight.','Hold a dumbbell in each hand.'],
+    anim:{a:M(STAND,{t:125,th:45,sh:-15,ua:55,fa:90}), b:M(STAND,{t:122,th:50,sh:-18,ua:55,fa:92}), period:3}, pin:{pt:'ankle',x:210}},
+  splitSquat:{name:'Split squat', cues:['Long stride, back heel up','Drop the back knee straight down toward the floor','Front knee tracks over your toes'],
+    why:'Single-leg strength — on rough ground each leg works on its own.', load:['Bodyweight, hand on desk for balance if needed.',''],
+    anim:{a:{...STAND, th:20, sh:-5, th2:-25, sh2:-35, ft2:50}, b:{...STAND, th:85, sh:-5, th2:-5, sh2:-110, ft2:20}, period:3.5}, pin:{pt:'ankle',x:240}, db:'both'},
+  bulgarian:{name:'Bulgarian split squat', cues:['Back foot laces-down on a chair or step','Most of your weight on the front leg','Lower until the back knee nearly touches the floor'],
+    why:'Single-leg strength — on rough ground each leg works on its own.', load:['','A dumbbell in each hand once bodyweight is easy.'],
+    anim:{a:{...STAND, th:20, sh:-5, th2:-25, sh2:-60, ft2:-95}, b:{...STAND, th:85, sh:-8, th2:-2, sh2:-122, ft2:-95}, period:3.5}, pin:{pt:'ankle',x:240}, props:['box'], db:'both'},
+  slRdl:{name:'Single-leg RDL', cues:['Soft standing knee, hinge at the hip','Back leg and torso move as one straight line','Hips square to the floor — slow and controlled'],
+    why:'Glutes and hamstrings take the load off your lower back on the bike.', load:['No weight. Fingertip on the desk for balance.','Dumbbell in each hand.'],
+    anim:{a:{...STAND, th:5, sh:-5, th2:-5, sh2:-10, ft2:70}, b:{...STAND, t:95, th:15, sh:-10, th2:-88, sh2:-88, ft2:-5}, period:4}, pin:{pt:'ankle',x:230}, db:'both'},
+
+  /* Session B */
+  deadHang:{name:'Dead hang', cues:['Grip the bar shoulder-width, arms straight','Shoulders lightly engaged — not shrugged to your ears','Drop off before your grip fails completely'],
+    why:'The best single grip-endurance builder for arm pump. Also decompresses your spine.', load:['Short holds. Feet can touch a step.','Full hang, build toward 60 seconds.'],
+    anim:{a:HANG, b:M(HANG,{th:-3, sh:3}), period:3}, pin:{pt:'hand',x:200}, mode:'bar', props:['bar']},
+  scapPull:{name:'Scapular pulls', cues:['From a dead hang, arms stay straight','Pull shoulder blades down and back to rise slightly','Lower slowly, repeat'],
+    why:'Shoulder control so your upper body absorbs hits instead of bracing against them.',
+    anim:{a:{...HANG, shr:6}, b:{...HANG, shr:-3}, period:2.5}, pin:{pt:'hand',x:200}, mode:'bar', props:['bar']},
+  farmer:{name:"Farmer's hold", cues:['Heavy dumbbell in each hand, arms by your sides','Crush the handles, stand tall','Shoulders down, breathe'],
+    why:'Grip endurance — the main fix for forearm pump.', load:['Moderate weight.','As heavy as you can hold for the full time.'],
+    anim:{a:STAND, b:{...STAND, t:179}, period:3}, pin:{pt:'ankle',x:200}, db:'both'},
+  inclinePush:{name:'Incline push-up', cues:['Hands on a sturdy desk edge','Body straight from heels to head','Lower chest to the edge, push back up'],
+    why:'Upper-body strength to hold position through braking bumps.',
+    anim:{a:M(STAND,{t:158,th:-22,sh:-22,ft:40,ua:0,fa:0,ha:90}), b:M(STAND,{t:130,th:-50,sh:-50,ft:30,ua:-100,fa:28,ha:90}), period:2.5},
+    pin:{pt:'hand',x:270}, props:['desk']},
+  pushup:{name:'Push-up', cues:['Hands under shoulders, body one straight line','Lower your chest to the floor, elbows at 45°','Push away hard; stop before form breaks'],
+    why:'Upper-body strength to hold position through braking bumps.',
+    anim:{a:M(STAND,{t:110,th:-70,sh:-70,ft:20,ua:0,fa:0,ha:90}), b:M(STAND,{t:93,th:-87,sh:-87,ft:15,ua:-100,fa:28,ha:90}), period:2.5},
+    pin:{pt:'hand',x:300}},
+  row:{name:'Bent-over row', cues:['Hinge forward, flat back, soft knees','Pull the dumbbells to your hips, elbows back','Lower slowly — no jerking'],
+    why:'A strong upper back keeps you in position instead of slumping onto the bars.', load:['Light — perfect the flat back first.','Last 3 reps should be hard.'],
+    anim:{a:M(STAND,{t:125,th:15,sh:-10}), b:M(STAND,{t:125,th:15,sh:-10,ua:-95,fa:5}), period:2.5}, pin:{pt:'ankle',x:220}, db:'both'},
+  wristCurl:{name:'Wrist curls', cues:['Sit, forearms on thighs, palms up, hands past knees','Let the dumbbell roll down to your fingertips','Curl it back up using the wrist only'],
+    why:'Directly trains the forearm muscles that pump up on long descents.', load:['Light.','Moderate — slow and strict.'],
+    anim:{a:{...SEAT, ha:30, ha2:30}, b:{...SEAT, ha:140, ha2:140}, period:2}, pin:{pt:'ankle',x:220}, props:['seat'], db:'both'},
+  revCurl:{name:'Reverse wrist curls', cues:['Same seat, palms facing down','Lift the back of the hand up','Lighter than wrist curls — slow and strict'],
+    why:'Balances the forearm. Skipping this side is a common cause of elbow pain.', load:['Very light.','Light.'],
+    anim:{a:{...SEAT, ha:20, ha2:20}, b:{...SEAT, ha:115, ha2:115}, period:2}, pin:{pt:'ankle',x:220}, props:['seat'], db:'both'},
+
+  /* Session C */
+  bridge:{name:'Glute bridge', cues:['On your back, feet flat, knees bent','Drive through your heels, squeeze glutes to lift','Ribs down — don\u2019t arch your lower back'],
+    why:'Strong glutes stop your lower back doing their job in attack position.', load:['Bodyweight.','Dumbbell resting across your hips.'],
+    anim:{a:M(SUP,{th:135,sh:45,ft:90,ua:90,fa:90}), b:M(SUP,{t:-72,hd:-58,th:108,sh:45,ft:90,ua:90,fa:90}), period:3.5}, pin:{pt:'ankle',x:280}},
+  birdDog:{name:'Bird dog', cues:['On hands and knees, back flat','Reach one arm forward and the opposite leg back','Pause 2 seconds — don\u2019t let your hips rotate'],
+    why:'Trains your trunk to stay stable while your limbs move — exactly what the bike asks of you.',
+    anim:{a:QUAD, b:{...QUAD, ua:100, fa:100, ha:100, th2:-100, sh2:-100, ft2:-100}, period:4}, pin:{pt:'knee',x:150}},
+  deadBug:{name:'Dead bug', cues:['On your back, arms to the ceiling, knees over hips','Slowly lower the opposite arm and leg toward the floor','Press your lower back into the floor the whole time'],
+    why:'Core control that protects your lower back.',
+    anim:{a:M(SUP,{ua:180,fa:180,th:180,sh:90,ft:180}), b:{...M(SUP,{ua:180,fa:180,th:180,sh:90,ft:180}), ua:260, fa:260, ha:260, th2:100, sh2:100, ft2:100}, period:4},
+    pin:{pt:'hip',x:210}},
+  kneePlank:{name:'Side plank (knees)', cues:['Elbow under shoulder, knees bent behind you','Lift hips so knees to head is one line','Top arm to the ceiling, don\u2019t let hips sag'],
+    why:'Side-core strength for leaning the bike and not getting knocked off line.',
+    anim:{a:{...M(STAND,{t:108,th:-72,sh:-95,ft:-95}), ua:0, fa:90, ha:90, ua2:180, fa2:180, ha2:180},
+          b:{...M(STAND,{t:104,th:-76,sh:-95,ft:-95}), ua:0, fa:90, ha:90, ua2:180, fa2:180, ha2:180}, period:3}, pin:{pt:'elbow',x:270}},
+  sidePlank:{name:'Side plank', cues:['Elbow under shoulder, body one straight line','Lift hips, top arm to the ceiling','Don\u2019t let hips sag'],
+    why:'Side-core strength for leaning the bike and not getting knocked off line.',
+    anim:{a:{...M(STAND,{t:102,th:-78,sh:-78,ft:-78}), ua:0, fa:90, ha:90, ua2:180, fa2:180, ha2:180},
+          b:{...M(STAND,{t:97,th:-82,sh:-76,ft:-78}), ua:0, fa:90, ha:90, ua2:180, fa2:180, ha2:180}, period:3}, pin:{pt:'elbow',x:270}},
+  suitcase:{name:'Suitcase hold', cues:['Heavy dumbbell in one hand only','Stand dead straight — don\u2019t lean toward the weight','Crush the handle, breathe'],
+    why:'Anti-lean core strength plus grip — two problems, one exercise.', load:['Moderate.','Heavy.'],
+    anim:{a:{...STAND, ua2:12, fa2:12, ha2:12}, b:{...STAND, t:179, ua2:12, fa2:12, ha2:12}, period:3}, pin:{pt:'ankle',x:200}, db:'near'},
+
+  /* Stretches */
+  hipFlexor:{name:'Kneeling hip flexor stretch', cues:['Back knee down (on a cushion), front foot flat','Squeeze the back-side glute, tuck your pelvis','Shift hips gently forward — feel the front of the back hip'],
+    why:'Tight hip flexors from riding and sitting pull on your lower back.',
+    anim:{a:{...M(STAND,{ua:-20,fa:50}), th:92, sh:-3, ft:90, th2:-15, sh2:-90, ft2:-90},
+          b:{...M(STAND,{t:184,ua:-20,fa:50}), th:95, sh:-15, ft:90, th2:-28, sh2:-90, ft2:-90}, period:5}, pin:{pt:'ankle',x:250}},
+  quad:{name:'Standing quad stretch', cues:['Hold a desk for balance if needed','Pull your heel to your glute, knees together','Tuck pelvis — don\u2019t arch your back'],
+    why:'Your quads do the most work descending. Let them recover.',
+    anim:{a:{...STAND, ua:80, fa:85, ha:85, th2:-5, sh2:-165, ft2:-170, ua2:-10, fa2:-20, ha2:-20},
+          b:{...STAND, ua:80, fa:85, ha:85, th2:-12, sh2:-168, ft2:-170, ua2:-10, fa2:-20, ha2:-20}, period:5}, pin:{pt:'ankle',x:200}},
+  hamstring:{name:'Standing hamstring stretch', cues:['Front heel down, toes up, leg straight','Bend the back knee, hinge forward with a flat back','Hands on the back thigh; feel the back of the front leg'],
+    why:'Tight hamstrings round your lower back in attack position.',
+    anim:{a:{...M(STAND,{t:140,ua:30,fa:30}), th:27, sh:27, ft:160, th2:25, sh2:-25, ft2:90},
+          b:{...M(STAND,{t:128,ua:30,fa:30}), th:27, sh:27, ft:160, th2:25, sh2:-25, ft2:90}, period:5}, pin:{pt:'ankle2',x:200}},
+  calf:{name:'Calf stretch (wall)', cues:['Hands on the wall, one foot back','Back leg straight, heel pressed down','Lean in until you feel the calf'],
+    why:'Calves absorb every landing and take a beating on the pedals.',
+    anim:{a:{...M(STAND,{t:160,ua:75,fa:90}), th:25, sh:-10, ft:90, th2:-22, sh2:-22, ft2:90},
+          b:{...M(STAND,{t:155,ua:75,fa:90}), th:30, sh:-13, ft:90, th2:-22, sh2:-22, ft2:90}, period:5}, pin:{pt:'ankle',x:200}, props:['wall']},
+  forearmFlex:{name:'Forearm flexor stretch', cues:['Arm straight out, palm up','Other hand gently pulls the fingers down and back','Elbow straight — stretch, never pain'],
+    why:'Releases the muscles that pump up from braking and gripping.',
+    anim:{a:{...STAND, ua:90, fa:90, ha:15, ua2:50, fa2:100, ha2:120}, b:{...STAND, ua:90, fa:90, ha:0, ua2:50, fa2:100, ha2:120}, period:5}, pin:{pt:'ankle',x:180}},
+  forearmExt:{name:'Forearm extensor stretch', cues:['Arm straight out, palm down','Other hand gently presses the back of the hand down','Turn the fingers slightly inward for more stretch'],
+    why:'The other side of the forearm — tight here means sore elbows.',
+    anim:{a:{...STAND, ua:90, fa:90, ha:15, ua2:50, fa2:100, ha2:120}, b:{...STAND, ua:90, fa:90, ha:0, ua2:50, fa2:100, ha2:120}, period:5}, pin:{pt:'ankle',x:180}},
+  chest:{name:'Doorway chest stretch', cues:['Forearms on a doorframe, elbows at shoulder height','Step one foot through','Lean gently until the chest opens'],
+    why:'Opens the chest that tightens from hunching over the bars.',
+    anim:{a:{...M(STAND,{t:175,ua:-90,fa:-180}), th:20, sh:-5, th2:-10, sh2:-10},
+          b:{...M(STAND,{t:170,ua:-90,fa:-180}), th:24, sh:-5, th2:-10, sh2:-10}, period:5}, pin:{pt:'ankle',x:230}, props:['post']},
+  childPose:{name:"Child's pose", cues:['Kneel and sit your hips back toward your heels','Walk your hands forward, forehead down','Breathe slowly into your lower back'],
+    why:'Gently stretches and calms the lower back.',
+    anim:{a:M(STAND,{t:70,hd:-15,ua:77,fa:80,ha:90,th:45,sh:-90,ft:-90}), b:M(STAND,{t:74,hd:-15,ua:79,fa:82,ha:90,th:50,sh:-90,ft:-90}), period:5},
+    pin:{pt:'knee',x:230}},
+  figure4:{name:'Figure-4 glute stretch', cues:['On your back, cross one ankle over the opposite knee','Pull the lower thigh toward your chest','Head and shoulders relaxed on the floor'],
+    why:'Releases tight glutes that refer pain into the lower back.',
+    anim:{a:{...M(SUP,{ua:160,fa:110}), th:120, sh:50, ft:90, th2:160, sh2:100, ft2:100},
+          b:{...M(SUP,{ua:165,fa:115}), th:128, sh:50, ft:90, th2:170, sh2:108, ft2:100}, period:5}, pin:{pt:'hip',x:200}},
+};
+
+/* ================= SESSIONS ================= */
+// ex / w can be [foundation, progressed]. noBar = substitute when no pull-up bar.
+const SESSIONS = {
+  A:{name:'Session A · Legs', tag:'Leg pump', rounds:2,
+    warm:['march','legSwings','bwSquat','hipHinge'],
+    work:[
+      {ex:'gobletSquat', w:40, r:20},
+      {ex:'attack', w:40, r:20},
+      {ex:['splitSquat','bulgarian'], w:30, r:10, side:'Left leg forward'},
+      {ex:['splitSquat','bulgarian'], w:30, r:20, side:'Right leg forward'},
+      {ex:'slRdl', w:30, r:10, side:'Standing on left leg'},
+      {ex:'slRdl', w:30, r:20, side:'Standing on right leg'},
+    ],
+    stretch:[
+      {ex:'hipFlexor', d:35, side:'Left knee down'},{ex:'hipFlexor', d:35, side:'Right knee down'},
+      {ex:'quad', d:30, side:'Left leg'},{ex:'quad', d:30, side:'Right leg'},
+      {ex:'hamstring', d:25, side:'Left leg'},{ex:'hamstring', d:25, side:'Right leg'},
+      {ex:'calf', d:25, side:'Left leg back'},{ex:'calf', d:25, side:'Right leg back'},
+    ]},
+  B:{name:'Session B · Grip & Upper', tag:'Arm pump', rounds:2,
+    warm:['armSwings','wristRolls','march','hipHinge'],
+    work:[
+      {ex:'deadHang', w:[20,30], r:25, noBar:'farmer'},
+      {ex:['inclinePush','pushup'], w:40, r:20},
+      {ex:'scapPull', w:30, r:20, noBar:'suitcase', noBarSide:'Switch hands halfway'},
+      {ex:'row', w:40, r:20},
+      {ex:'wristCurl', w:30, r:10},
+      {ex:'revCurl', w:30, r:20},
+    ],
+    stretch:[
+      {ex:'forearmFlex', d:20, side:'Left arm'},{ex:'forearmFlex', d:20, side:'Right arm'},
+      {ex:'forearmExt', d:20, side:'Left arm'},{ex:'forearmExt', d:20, side:'Right arm'},
+      {ex:'chest', d:40},{ex:'childPose', d:45},{ex:'catCow', d:40},
+    ]},
+  C:{name:'Session C · Core & Back', tag:'Lower back', rounds:2,
+    warm:['march','catCow','hipHinge','bwSquat'],
+    work:[
+      {ex:'bridge', w:40, r:20},
+      {ex:'birdDog', w:30, r:10, side:'Right arm, left leg'},
+      {ex:'birdDog', w:30, r:20, side:'Left arm, right leg'},
+      {ex:'deadBug', w:40, r:20},
+      {ex:['kneePlank','sidePlank'], w:[25,30], r:10, side:'Left elbow down'},
+      {ex:['kneePlank','sidePlank'], w:[25,30], r:20, side:'Right elbow down'},
+      {ex:'suitcase', w:30, r:10, side:'Weight in left hand'},
+      {ex:'suitcase', w:30, r:20, side:'Weight in right hand'},
+    ],
+    stretch:[
+      {ex:'hipFlexor', d:35, side:'Left knee down'},{ex:'hipFlexor', d:35, side:'Right knee down'},
+      {ex:'hamstring', d:25, side:'Left leg'},{ex:'hamstring', d:25, side:'Right leg'},
+      {ex:'figure4', d:35, side:'Left ankle over right knee'},{ex:'figure4', d:35, side:'Right ankle over left knee'},
+      {ex:'childPose', d:45},
+    ]},
+};
+
+const QUOTES = [
+  'Quiet upper body, busy legs. That starts here.',
+  'Fundamentals aren\u2019t the boring bit. They\u2019re the whole bit.',
+  'Every rep you do tired pays off at the bottom of a long descent.',
+  'Strong legs buy you loose arms. Loose arms buy you control.',
+  'Control first. Speed is what control turns into.',
+  'Nobody sees this bit. The trail will.',
+  'Consistency beats intensity. Just show up for the next one.',
+  'The burn is the adaptation. Breathe through it.',
+  'Fresher legs at the end of a ride mean better decisions at the end of a ride.',
+  'Twenty minutes in the office buys you another lap at the top.',
+  'Smooth is a skill. So is strong. Build both.',
+  'Hold the position now so you never have to think about it later.',
+];
+const quote = () => QUOTES[Math.floor(Math.random()*QUOTES.length)];
+
+function buildSteps(key, mode, bar){
+  const s=SESSIONS[key], steps=[];
+  const pick=v=>Array.isArray(v)?v[mode]:v;
+  const resolve=e=>{ const useAlt=!bar&&e.noBar; return {ex:useAlt?e.noBar:pick(e.ex), side:useAlt?(e.noBarSide||''):(e.side||'')}; };
+  steps.push({type:'ready', dur:8, ex:s.warm[0], side:''});
+  s.warm.forEach(id=>steps.push({type:'warm', dur:30, ex:id, side:''}));
+  for(let r=1;r<=s.rounds;r++){
+    s.work.forEach((e,j)=>{
+      const cur=resolve(e);
+      steps.push({type:'work', dur:pick(e.w), ex:cur.ex, side:cur.side, round:r, rounds:s.rounds});
+      const last=j===s.work.length-1;
+      if(!last){ const nx=resolve(s.work[j+1]); steps.push({type:'rest', dur:e.r, ex:nx.ex, side:nx.side}); }
+      else if(r<s.rounds){ const nx=resolve(s.work[0]); steps.push({type:'break', dur:30, ex:nx.ex, side:nx.side}); }
+    });
+  }
+  steps.push({type:'rest', dur:10, ex:s.stretch[0].ex, side:s.stretch[0].side||'', toStretch:true});
+  s.stretch.forEach(x=>steps.push({type:'stretch', dur:x.d, ex:x.ex, side:x.side||''}));
+  return steps;
+}
+const totalSecs = steps => steps.reduce((a,s)=>a+s.dur,0);
+
+/* ================= SVG DRAW ================= */
+const NEAR='#e8ecf1', FAR='#6f7a89', ACC='#ff7a1a', PROP='#3a424e';
+const ln=(a,b,w,c)=>`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+const dbRect=(p,w,h)=>`<rect x="${(p[0]-w/2).toFixed(1)}" y="${(p[1]-h/2).toFixed(1)}" width="${w}" height="${h}" rx="3" fill="${ACC}"/>`;
+
+function drawSVG(ex,time){
+  const p=placed(ex,time), props=ex.props||[];
+  let s='';
+  // props
+  if(props.includes('seat')) s+=`<rect x="${(p.hip[0]-26).toFixed(1)}" y="${(p.hip[1]+8).toFixed(1)}" width="42" height="${(GROUND-p.hip[1]-8).toFixed(1)}" rx="3" fill="${PROP}"/>`;
+  if(props.includes('box')){ const top=Math.max(p.ankle2[1],p.toe2[1])+5; s+=`<rect x="${(p.ankle2[0]-26).toFixed(1)}" y="${top.toFixed(1)}" width="46" height="${(GROUND-top).toFixed(1)}" rx="3" fill="${PROP}"/>`; }
+  if(props.includes('desk')){ const top=Math.max(p.hand[1],p.hand2[1])+4, x=p.hand[0]-14;
+    s+=`<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="90" height="7" rx="2" fill="${PROP}"/>`+
+       `<rect x="${(x+70).toFixed(1)}" y="${top.toFixed(1)}" width="7" height="${(GROUND-top).toFixed(1)}" fill="${PROP}"/>`+
+       `<rect x="${(x+4).toFixed(1)}" y="${top.toFixed(1)}" width="7" height="${(GROUND-top).toFixed(1)}" fill="${PROP}"/>`; }
+  if(props.includes('wall')){ const x=Math.max(p.hand[0],p.hand2[0])+6; s+=`<rect x="${x.toFixed(1)}" y="14" width="10" height="${GROUND-14}" fill="${PROP}"/>`; }
+  if(props.includes('post')){ const x=Math.min(p.elbow[0],p.elbow2[0])-14; s+=`<rect x="${x.toFixed(1)}" y="14" width="8" height="${GROUND-14}" fill="${PROP}"/>`; }
+  if(props.includes('bar')) s+=`<line x1="110" y1="${BAR_Y}" x2="290" y2="${BAR_Y}" stroke="${PROP}" stroke-width="6" stroke-linecap="round"/>`+
+       `<rect x="104" y="${BAR_Y-14}" width="8" height="20" fill="${PROP}"/><rect x="288" y="${BAR_Y-14}" width="8" height="20" fill="${PROP}"/>`;
+  s+=`<line x1="14" y1="${GROUND+5}" x2="386" y2="${GROUND+5}" stroke="#2a313b" stroke-width="3"/>`;
+  // far side
+  s+=ln(p.hip,p.knee2,13,FAR)+ln(p.knee2,p.ankle2,11,FAR)+ln(p.ankle2,p.toe2,8,FAR);
+  s+=ln(p.sho,p.elbow2,10,FAR)+ln(p.elbow2,p.wrist2,9,FAR)+ln(p.wrist2,p.hand2,7,FAR);
+  if(ex.db==='both') s+=dbRect(p.hand2,13,15);
+  // torso (curved for spine bend)
+  const d=dir(lerpT(ex,time)), perp=[d[1],-d[0]], bend=lerpBend(ex,time);
+  const mid=[(p.hip[0]+p.neck[0])/2+perp[0]*bend*2,(p.hip[1]+p.neck[1])/2+perp[1]*bend*2];
+  s+=`<path d="M${p.hip[0].toFixed(1)} ${p.hip[1].toFixed(1)} Q${mid[0].toFixed(1)} ${mid[1].toFixed(1)} ${p.neck[0].toFixed(1)} ${p.neck[1].toFixed(1)}" stroke="${NEAR}" stroke-width="17" stroke-linecap="round" fill="none"/>`;
+  s+=`<circle cx="${p.head[0].toFixed(1)}" cy="${p.head[1].toFixed(1)}" r="${LEN.headR}" fill="${NEAR}"/>`;
+  // near side
+  s+=ln(p.hip,p.knee,13,NEAR)+ln(p.knee,p.ankle,11,NEAR)+ln(p.ankle,p.toe,8,NEAR);
+  s+=ln(p.sho,p.elbow,10,NEAR)+ln(p.elbow,p.wrist,9,NEAR)+ln(p.wrist,p.hand,7,NEAR);
+  if(ex.db==='both'||ex.db==='near') s+=dbRect(p.hand,13,15);
+  if(ex.db==='goblet') s+=dbRect([(p.hand[0]+p.hand2[0])/2,(p.hand[1]+p.hand2[1])/2],14,24);
+  return s;
+}
+function wAt(ex,time){const per=ex.anim.period||3;return (1-Math.cos(2*Math.PI*((time%per)/per)))/2;}
+function lerpT(ex,time){const w=wAt(ex,time);return ex.anim.a.t+(ex.anim.b.t-ex.anim.a.t)*w;}
+function lerpBend(ex,time){const w=wAt(ex,time);return ex.anim.a.bend+(ex.anim.b.bend-ex.anim.a.bend)*w;}
+
+/* ================= APP ================= */
+if (typeof document !== 'undefined') {
+  const $=id=>document.getElementById(id);
+  const KEY='trailStrength.v1';
+  let store={mode:0, bar:true, sound:true, voice:true, history:{}};
+  try{ const raw=localStorage.getItem(KEY); if(raw) store={...store,...JSON.parse(raw)}; }catch(e){}
+  const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} };
+
+  const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+
+  function nextSuggested(){
+    let lastKey=null,lastT=0;
+    for(const k of ['A','B','C']){ const h=store.history[k]; if(h&&h.last>lastT){lastT=h.last;lastKey=k;} }
+    return lastKey?{A:'B',B:'C',C:'A'}[lastKey]:'A';
+  }
+
+  function renderHome(){
+    document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.mode===store.mode));
+    $('barChk').checked=store.bar; $('soundChk').checked=store.sound; $('voiceChk').checked=store.voice;
+    const nx=nextSuggested();
+    $('cards').innerHTML=Object.entries(SESSIONS).map(([k,s])=>{
+      const steps=buildSteps(k,store.mode,store.bar);
+      const names=[...new Set(steps.filter(x=>x.type==='work').map(x=>EX[x.ex].name))];
+      const h=store.history[k];
+      const last=h?`Done ${h.count}× · last ${new Date(h.last).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`:'Not done yet';
+      return `<div class="card ${k===nx?'next':''}">${k===nx?'<span class="badge">UP NEXT</span>':''}
+        <div class="tag">${s.tag}</div><h2>${s.name}</h2>
+        <ul>${names.map(n=>`<li>${n}</li>`).join('')}</ul>
+        <div class="meta"><span>${Math.round(totalSecs(steps)/60)} min</span><span>${last}</span></div>
+        <button class="btn" data-start="${k}">Start</button></div>`;
+    }).join('');
+    $('homeQuote').textContent='\u201C'+quote()+'\u201D';
+  }
+
+  $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;store.mode=+b.dataset.mode;save();renderHome();});
+  $('barChk').addEventListener('change',e=>{store.bar=e.target.checked;save();renderHome();});
+  $('soundChk').addEventListener('change',e=>{store.sound=e.target.checked;save();});
+  $('voiceChk').addEventListener('change',e=>{store.voice=e.target.checked;save();});
+  $('cards').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(b)start(b.dataset.start);});
+
+  /* audio */
+  let actx=null;
+  function beep(freq,len){ if(!store.sound) return; try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=freq; o.type='sine';
+    g.gain.setValueAtTime(0.18,actx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+len);
+    o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+len);
+  }catch(e){} }
+  function say(t){ if(!store.voice||!('speechSynthesis' in window)) return; try{
+    speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.rate=1.02; speechSynthesis.speak(u);
+  }catch(e){} }
+
+  /* player */
+  const P={key:null,steps:[],i:0,remaining:0,running:false,animT:0,sumBefore:[],total:0};
+
+  function start(key){
+    P.key=key; P.steps=buildSteps(key,store.mode,store.bar); P.total=totalSecs(P.steps);
+    P.sumBefore=[]; let acc=0; P.steps.forEach(s=>{P.sumBefore.push(acc);acc+=s.dur;});
+    $('home').classList.add('hidden'); $('done').classList.add('hidden'); $('player').classList.remove('hidden');
+    $('pTitle').textContent=SESSIONS[key].name+(store.mode?' · Progressed':' · Foundation');
+    try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    P.running=true; $('playBtn').textContent='Pause';
+    enter(0);
+  }
+
+  function enter(i){
+    P.i=i; const st=P.steps[i], ex=EX[st.ex];
+    P.remaining=st.dur; P.animT=0;
+    const chip=$('pChip'); chip.className='chip';
+    let label='';
+    if(st.type==='ready'){label='GET READY';chip.classList.add('rest');}
+    else if(st.type==='warm'){label='WARM-UP';chip.classList.add('warm');}
+    else if(st.type==='work'){label=`WORK · ROUND ${st.round}/${st.rounds}`;}
+    else if(st.type==='rest'){label=st.toStretch?'REST — STRETCHES NEXT':'REST — NEXT UP';chip.classList.add('rest');}
+    else if(st.type==='break'){label=`ROUND BREAK — ROUND 2 NEXT`;chip.classList.add('rest');}
+    else if(st.type==='stretch'){label='STRETCH';chip.classList.add('stretch');}
+    chip.textContent=label;
+    $('pName').textContent=ex.name;
+    $('pSide').textContent=st.side||'';
+    const ld=ex.load?ex.load[store.mode]:'';
+    $('pLoad').innerHTML=ld?`<b>Load:</b> ${ld}`:'';
+    $('pCues').innerHTML=ex.cues.map(c=>`<li>${c}</li>`).join('');
+    $('pWhy').textContent='On the bike: '+ex.why;
+    const q=$('pQuote');
+    if(st.type==='break'){q.textContent='\u201C'+quote()+'\u201D';q.classList.remove('hidden');} else q.classList.add('hidden');
+    const nxt=P.steps.slice(i+1).find(s=>s.type!=='rest'&&s.type!=='break');
+    $('pNext').textContent=nxt?`After this: ${EX[nxt.ex].name}${nxt.side?' ('+nxt.side+')':''}`:'Last one.';
+    if(i>0) beep(880,0.3);
+    const nm=ex.name+(st.side?'. '+st.side:'');
+    if(st.type==='ready') say('Get ready. First up, '+nm);
+    else if(st.type==='rest'||st.type==='break') say((st.type==='break'?'Round break. ':'Rest. ')+'Next, '+nm);
+    else say(nm);
+  }
+
+  function advance(d){
+    const n=P.i+d;
+    if(n>=P.steps.length){ finish(); return; }
+    enter(Math.max(0,n));
+  }
+
+  function finish(){
+    P.running=false;
+    const h=store.history[P.key]||{count:0,last:0}; h.count++; h.last=Date.now(); store.history[P.key]=h; save();
+    $('player').classList.add('hidden'); $('done').classList.remove('hidden');
+    $('doneSub').textContent=`${SESSIONS[P.key].name} complete — that\u2019s ${h.count} in total. Next up: Session ${nextSuggested()}.`;
+    $('doneQuote').textContent='\u201C'+quote()+'\u201D';
+    beep(660,0.2); setTimeout(()=>beep(990,0.4),220); say('Session done. Good work.');
+  }
+
+  function exit(){ P.running=false; try{speechSynthesis.cancel();}catch(e){} $('player').classList.add('hidden'); $('home').classList.remove('hidden'); renderHome(); }
+  function togglePlay(){ P.running=!P.running; $('playBtn').textContent=P.running?'Pause':'Resume'; if(!P.running){try{speechSynthesis.cancel();}catch(e){}} }
+
+  $('playBtn').onclick=togglePlay;
+  $('skipBtn').onclick=()=>advance(1);
+  $('backBtn').onclick=()=>advance(-1);
+  $('exitBtn').onclick=exit;
+  $('homeBtn').onclick=()=>{ $('done').classList.add('hidden'); $('home').classList.remove('hidden'); renderHome(); };
+  document.addEventListener('keydown',e=>{
+    if($('player').classList.contains('hidden')) return;
+    if(e.code==='Space'){e.preventDefault();togglePlay();}
+    else if(e.code==='ArrowRight'){advance(1);}
+    else if(e.code==='ArrowLeft'){advance(-1);}
+    else if(e.code==='Escape'){exit();}
+  });
+
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min(0.25,(now-last)/1000); last=now;
+    if(!$('player').classList.contains('hidden') && P.steps.length){
+      const st=P.steps[P.i];
+      if(P.running){
+        const before=P.remaining; P.remaining-=dt; P.animT+=dt;
+        for(const s of [3,2,1]) if(before>s&&P.remaining<=s) beep(600,0.12);
+        if(P.remaining<=0){ advance(1); }
+      }
+      const cur=P.steps[P.i];
+      if(cur){
+        $('fig').innerHTML=drawSVG(EX[cur.ex],P.animT);
+        $('pTimer').textContent=fmt(P.remaining);
+        const done=P.sumBefore[P.i]+(cur.dur-P.remaining);
+        $('pBar').style.width=(100*done/P.total).toFixed(2)+'%';
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  renderHome();
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
