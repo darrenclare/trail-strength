@@ -63,6 +63,47 @@ h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
 .hidden{display:none!important}
 #done{text-align:center;padding-top:60px}
 #done h1{font-size:40px}
+/* tabs + weight page */
+.hdr{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+.tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tabs button{background:none;border:0;color:var(--muted);padding:9px 18px;font-weight:600}
+.tabs button.on{background:var(--accent);color:#111}
+.kg{color:var(--muted);font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stat .lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat .val{font-size:24px;font-weight:800;margin:6px 0 2px;line-height:1.2}
+.stat .val .kg{font-size:16px;display:block}
+.stat .sm{font-size:13px;color:var(--muted)}
+.pbar{height:6px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:8px}
+.pbar i{display:block;height:100%;background:var(--rest)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:17px}
+.two{display:grid;grid-template-columns:1fr 1.4fr;gap:16px}
+.two .panel{margin-bottom:16px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:3px;display:inline-block;border-radius:2px}
+.form{display:flex;flex-direction:column;gap:12px}
+.form label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);font-weight:600}
+.form input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 12px;font:inherit;font-size:18px}
+.form input:focus{outline:2px solid var(--accent);outline-offset:0}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kgread{font-size:22px;font-weight:800;color:var(--accent);min-height:1.3em}
+.kgread.small{font-size:15px;font-weight:600;color:var(--muted);min-height:1em}
+.muted{color:var(--muted);font-size:13px}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.t td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t td .kg{display:block;font-size:12px}
+.del{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:2px 9px}
+.del:hover{color:#ff6b6b;border-color:#ff6b6b}
+.flag{border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;border:1px solid var(--line);background:var(--panel)}
+.flag.warn{border-color:#c9a227}.flag.warn b{color:#e6c04a}
+.flag.info{border-color:var(--stretch)}.flag.info b{color:#8fb0f5}
+.flag.good{border-color:var(--rest)}.flag.good b{color:var(--rest)}
+.ok{color:var(--rest);font-weight:700}.behind{color:#e6c04a;font-weight:700}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
 /* scale everything up on big desktop screens */
 /* zoom also scales vh, so the figure height is divided back down to keep the player on one screen */
 @media (min-width:1500px){.wrap{zoom:1.2}.figbox svg{max-height:50vh}.figbox{min-height:300px}}
@@ -75,7 +116,8 @@ h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
 
 <!-- HOME -->
 <div id="home" class="wrap">
-  <h1>Trail Strength</h1>
+  <div class="hdr"><h1>Trail Strength</h1>
+    <nav class="tabs"><button data-tab="home" class="on">Sessions</button><button data-tab="weight">Weight</button></nav></div>
   <p class="sub">15–20 minute home sessions for arm pump, leg pump and a stronger lower back. Rotate A → B → C, three times a week.</p>
 
   <div class="row">
@@ -96,6 +138,63 @@ h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
     <div class="note"><b>Scheduling.</b> Not Session A the night before a big ride. Stop any exercise that causes sharp pain, or pain down a leg — that's a physio question, not a training one.</div>
   </div>
   <p class="quote" id="homeQuote" style="margin-top:22px"></p>
+</div>
+
+<!-- WEIGHT -->
+<div id="weight" class="wrap hidden">
+  <div class="hdr"><h1>Trail Strength</h1>
+    <nav class="tabs"><button data-tab="home">Sessions</button><button data-tab="weight" class="on">Weight</button></nav></div>
+  <p class="sub">Target 12 st 7 lb · 79.4 kg. Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
+
+  <div class="stats" id="wStats"></div>
+  <div id="wFlags"></div>
+
+  <div class="panel">
+    <h3>Progress</h3>
+    <div id="wChart"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--accent)"></i>Monthly average (filled = 5+ readings)</span>
+      <span><i class="sw" style="background:var(--muted)"></i>Single readings</span>
+      <span><i class="sw" style="background:repeating-linear-gradient(90deg,#8a94a3 0 4px,transparent 4px 7px)"></i>Milestone plan</span>
+      <span><i class="sw" style="background:var(--rest)"></i>Target</span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="panel">
+      <h3>Log a weigh-in</h3>
+      <div class="form">
+        <label>Date<input type="date" id="fDate"></label>
+        <div class="pair">
+          <label>Stone<input type="number" id="fSt" min="6" max="30" step="1" inputmode="numeric" placeholder="13"></label>
+          <label>Pounds<input type="number" id="fLb" min="0" max="13.75" step="0.25" inputmode="decimal" placeholder="5"></label>
+        </div>
+        <div class="kgread" id="fKg">— kg</div>
+        <label>Waist, inches (optional)<input type="number" id="fWaist" min="20" max="60" step="0.25" inputmode="decimal" placeholder="36"></label>
+        <div class="kgread small" id="fCm"></div>
+        <button class="btn" id="fSave">Save weigh-in</button>
+        <div class="muted" id="fMsg"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Milestones</h3>
+      <table class="t" id="wMiles"></table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>All readings</h3>
+    <table class="t" id="wTable"></table>
+  </div>
+
+  <div class="panel">
+    <h3>Backup</h3>
+    <p class="muted" style="margin-top:0">Your data is saved in this browser on this computer only. Export a backup every month or so — if browser data is cleared, it's gone.</p>
+    <div class="row">
+      <button class="btn ghost" id="expBtn">Export backup</button>
+      <label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="impFile" accept="application/json,.json" hidden></label>
+    </div>
+  </div>
 </div>
 
 <!-- PLAYER -->
@@ -446,6 +545,97 @@ function wAt(ex,time){const per=ex.anim.period||3;return (1-Math.cos(2*Math.PI*(
 function lerpT(ex,time){const w=wAt(ex,time);return ex.anim.a.t+(ex.anim.b.t-ex.anim.a.t)*w;}
 function lerpBend(ex,time){const w=wAt(ex,time);return ex.anim.a.bend+(ex.anim.b.bend-ex.anim.a.bend)*w;}
 
+/* ================= WEIGHT (pure functions) ================= */
+const TARGET_LB = 175; // 12 st 7 lb
+const SEED_WEIGHTS = [{d:'2026-07-01', lb:196}, {d:'2026-10-19', lb:187}];
+const MILESTONES = [
+  {d:'2026-11-15', lb:184.5, label:'Mid-Nov'},
+  {d:'2026-12-15', lb:182,   label:'Mid-Dec'},
+  {d:'2027-01-15', lb:182,   label:'Mid-Jan · hold over Christmas'},
+  {d:'2027-02-15', lb:178.5, label:'Mid-Feb'},
+  {d:'2027-03-15', lb:175,   label:'Mid-Mar · target'},
+];
+const DAY = 864e5, WEEK = 7*DAY;
+const toKg = lb => lb*0.45359237;
+const num1 = n => { const r=Math.round(n*10)/10; return Number.isInteger(r)?String(r):r.toFixed(1); };
+function stlb(lb){
+  const neg=lb<0; lb=Math.abs(lb);
+  let st=Math.floor(lb/14), r=Math.round((lb-st*14)*10)/10;
+  if(r>=14){st++;r=0;}
+  return (neg?'−':'')+(st?st+' st ':'')+(st&&r===0?'0 lb':num1(r)+' lb');
+}
+const kgTxt = lb => num1(toKg(lb))+' kg';
+const both = lb => `${stlb(lb)} <span class="kg">${kgTxt(lb)}</span>`;
+const inCm = i => `${num1(i)} in <span class="kg">${num1(i*2.54)} cm</span>`;
+function dms(s){const [y,m,d]=s.split('-').map(Number);return Date.UTC(y,m-1,d);}
+function niceDate(s,year=true){return new Date(dms(s)).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:year?'numeric':undefined,timeZone:'UTC'});}
+const sortW = ws => [...ws].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+
+function monthly(ws){
+  const g={};
+  for(const e of sortW(ws)){ (g[e.d.slice(0,7)] ||= []).push(e); }
+  return Object.keys(g).sort().map(k=>{
+    const a=g[k];
+    return {k, n:a.length, lb:a.reduce((s,e)=>s+e.lb,0)/a.length, t:a.reduce((s,e)=>s+dms(e.d),0)/a.length};
+  });
+}
+// current = average of up to the last 5 readings within 14 days of the latest
+function currentW(ws){
+  const s=sortW(ws); if(!s.length) return null;
+  const lastT=dms(s[s.length-1].d);
+  const w=s.filter(e=>lastT-dms(e.d)<=14*DAY).slice(-5);
+  return {lb:w.reduce((a,e)=>a+e.lb,0)/w.length, n:w.length};
+}
+function weightFlags(ws, todayStr){
+  const f=[], mo=monthly(ws);
+  if(mo.length>=2){
+    const a=mo[mo.length-2], b=mo[mo.length-1], wks=(b.t-a.t)/WEEK;
+    if(wks>=1){
+      const rate=(a.lb-b.lb)/wks;
+      if(rate>1.5) f.push({c:'warn',t:`<b>Losing fast: ${num1(rate)} lb/week.</b> Above 1.5 lb/week you start losing muscle and recovery suffers. Eat a little more, especially on riding days.`});
+      if(Math.abs(a.lb-b.lb)<0.5 && wks>=3) f.push({c:'warn',t:`<b>Stalled for ${Math.round(wks)} weeks.</b> Log a week of food before changing anything — whole foods can still add up to too much.`});
+      if(b.lb-a.lb>=1) f.push({c:'info',t:`<b>Up ${stlb(b.lb-a.lb)} on last month.</b> Check sleep, salt and training load first. One month up isn't a trend.`});
+    }
+  }
+  const tm=todayStr.slice(0,7), day=+todayStr.slice(8,10);
+  const thisMonth=ws.filter(e=>e.d.startsWith(tm)).length;
+  if(thisMonth<5 && day>=8 && day<=22) f.push({c:'info',t:`<b>Weigh-in window.</b> ${thisMonth}/5 readings this month — log 5 mornings in a row around mid-month for the official figure.`});
+  return f;
+}
+function chartSVG(ws){
+  const s=sortW(ws); if(!s.length) return '';
+  const mo=monthly(ws);
+  const W=900,H=340,L=104,R=24,T=20,B=40;
+  const t0=dms(s[0].d)-10*DAY, t1=Math.max(dms(MILESTONES[MILESTONES.length-1].d), dms(s[s.length-1].d))+10*DAY;
+  const vals=[...s.map(e=>e.lb), TARGET_LB, ...MILESTONES.map(m=>m.lb)];
+  const lo=Math.floor((Math.min(...vals)-1)/7)*7, hi=Math.ceil((Math.max(...vals)+1)/7)*7;
+  const X=t=>L+(t-t0)/(t1-t0)*(W-L-R), Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  let o=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block" role="img" aria-label="Weight progress chart">`;
+  for(let v=lo; v<=hi+0.01; v+=7){
+    o+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+    o+=`<text x="${L-10}" y="${Y(v)-2}" text-anchor="end" font-size="13" fill="var(--text)">${stlb(v)}</text>`;
+    o+=`<text x="${L-10}" y="${Y(v)+13}" text-anchor="end" font-size="11" fill="var(--muted)">${kgTxt(v)}</text>`;
+  }
+  const d0=new Date(t0); let m=new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth()+1, 1));
+  while(m.getTime()<=t1){
+    const x=X(m.getTime());
+    o+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${H-B}" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4"/>`;
+    const lab=m.toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'})+(m.getUTCMonth()===0?' '+String(m.getUTCFullYear()).slice(2):'');
+    o+=`<text x="${x}" y="${H-B+20}" text-anchor="middle" font-size="12" fill="var(--muted)">${lab}</text>`;
+    m=new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth()+1, 1));
+  }
+  o+=`<line x1="${L}" x2="${W-R}" y1="${Y(TARGET_LB)}" y2="${Y(TARGET_LB)}" stroke="var(--rest)" stroke-width="2"/>`;
+  o+=`<text x="${L+8}" y="${Y(TARGET_LB)-6}" text-anchor="start" font-size="12" fill="var(--rest)">Target 12 st 7 lb · 79.4 kg</text>`;
+  const last=mo[mo.length-1];
+  const plan=[[X(last.t),Y(last.lb)], ...MILESTONES.filter(q=>dms(q.d)>last.t).map(q=>[X(dms(q.d)),Y(q.lb)])];
+  if(plan.length>1) o+=`<polyline points="${plan.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 5"/>`;
+  for(const q of MILESTONES) if(dms(q.d)>last.t) o+=`<circle cx="${X(dms(q.d))}" cy="${Y(q.lb)}" r="4" fill="var(--bg)" stroke="var(--muted)" stroke-width="2"/>`;
+  for(const e of s) o+=`<circle cx="${X(dms(e.d))}" cy="${Y(e.lb)}" r="3" fill="var(--muted)" opacity=".7"/>`;
+  if(mo.length>1) o+=`<polyline points="${mo.map(q=>X(q.t)+','+Y(q.lb)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
+  for(const q of mo) o+=`<circle cx="${X(q.t)}" cy="${Y(q.lb)}" r="6.5" fill="${q.n>=5?'var(--accent)':'var(--bg)'}" stroke="var(--accent)" stroke-width="2.5"><title>${q.k}: ${stlb(q.lb)} (${kgTxt(q.lb)}) from ${q.n} reading${q.n>1?'s':''}</title></circle>`;
+  return o+'</svg>';
+}
+
 /* ================= APP ================= */
 if (typeof document !== 'undefined') {
   const $=id=>document.getElementById(id);
@@ -453,6 +643,94 @@ if (typeof document !== 'undefined') {
   let store={mode:0, bar:true, sound:true, voice:true, history:{}};
   try{ const raw=localStorage.getItem(KEY); if(raw) store={...store,...JSON.parse(raw)}; }catch(e){}
   const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} };
+  if(!Array.isArray(store.weights)){ store.weights=SEED_WEIGHTS.map(x=>({...x})); save(); }
+
+  /* ---- tabs ---- */
+  function showTab(tab){
+    $('home').classList.toggle('hidden',tab!=='home');
+    $('weight').classList.toggle('hidden',tab!=='weight');
+    if(tab==='weight') renderWeight(); else renderHome();
+    window.scrollTo(0,0);
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]'); if(b) showTab(b.dataset.tab);});
+
+  /* ---- weight page ---- */
+  const todayStr=()=>{const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;};
+  function renderWeight(){
+    const ws=store.weights, s=sortW(ws), cur=currentW(ws);
+    if(!$('fDate').value) $('fDate').value=todayStr();
+    if(!cur){ $('wStats').innerHTML='<div class="stat"><div class="lbl">No readings yet</div></div>'; $('wChart').innerHTML=''; $('wTable').innerHTML=''; return; }
+    const start=s[0].lb, lost=start-cur.lb, toGo=Math.max(0,cur.lb-TARGET_LB);
+    const pct=Math.max(0,Math.min(100,100*lost/(start-TARGET_LB)));
+    const weeks=(dms(s[s.length-1].d)-dms(s[0].d))/WEEK;
+    const rate=weeks>=1?lost/weeks:null;
+    const waists=s.filter(e=>e.w);
+    const lastW=waists.length?waists[waists.length-1].w:null;
+    $('wStats').innerHTML=`
+      <div class="stat"><div class="lbl">Current</div><div class="val">${both(cur.lb)}</div><div class="sm">Average of last ${cur.n} reading${cur.n>1?'s':''}</div></div>
+      <div class="stat"><div class="lbl">Lost so far</div><div class="val">${both(lost)}</div><div class="sm">From ${stlb(start)} on ${niceDate(s[0].d)}</div></div>
+      <div class="stat"><div class="lbl">To go</div><div class="val">${toGo>0?both(toGo):'Target reached'}</div><div class="sm">${Math.round(pct)}% of the way to 12 st 7 lb</div><div class="pbar"><i style="width:${pct}%"></i></div></div>
+      <div class="stat"><div class="lbl">Average rate</div><div class="val">${rate===null?'—':num1(rate)+' lb/wk <span class="kg">'+num1(toKg(rate))+' kg/wk</span>'}</div><div class="sm">Healthy range 0.5–1.5 lb/wk</div></div>
+      <div class="stat"><div class="lbl">Waist</div><div class="val">${lastW?inCm(lastW):'—'}</div><div class="sm">${lastW?(lastW<35?'Under the 35 in target':'Target under 35 in · 88.9 cm'):'Add it at your next weigh-in'}</div></div>`;
+    $('wFlags').innerHTML=weightFlags(ws,todayStr()).map(x=>`<div class="flag ${x.c}">${x.t}</div>`).join('');
+    $('wChart').innerHTML=chartSVG(ws);
+    const mo=monthly(ws), today=todayStr();
+    $('wMiles').innerHTML='<tr><th>When</th><th>Aim</th><th>Actual (month avg)</th><th></th></tr>'+MILESTONES.map(q=>{
+      const m=mo.find(x=>x.k===q.d.slice(0,7));
+      let st='<span class="muted">Upcoming</span>';
+      if(m){ st=m.lb<=q.lb+0.5?'<span class="ok">On track</span>':`<span class="behind">${stlb(m.lb-q.lb)} over</span>`; }
+      else if(q.d.slice(0,7)<today.slice(0,7)) st='<span class="muted">No readings</span>';
+      return `<tr><td>${q.label}<span class="kg" style="display:block;font-size:12px">${niceDate(q.d)}</span></td><td>${both(q.lb)}</td><td>${m?both(m.lb)+`<span class="kg">${m.n} reading${m.n>1?'s':''}</span>`:'—'}</td><td>${st}</td></tr>`;
+    }).join('');
+    $('wTable').innerHTML='<tr><th>Date</th><th>Weight</th><th>Waist</th><th></th></tr>'+[...s].reverse().map(e=>
+      `<tr><td>${niceDate(e.d)}</td><td>${both(e.lb)}</td><td>${e.w?inCm(e.w):'—'}</td><td style="text-align:right"><button class="del" data-del="${e.d}" title="Delete">✕</button></td></tr>`).join('');
+  }
+  function readForm(){
+    const st=parseFloat($('fSt').value), lb=parseFloat($('fLb').value||'0');
+    if(isNaN(st)) return null;
+    return st*14+(isNaN(lb)?0:lb);
+  }
+  function updateReadout(){
+    const tot=readForm();
+    $('fKg').textContent=tot?`= ${kgTxt(tot)}`:'— kg';
+    const w=parseFloat($('fWaist').value);
+    $('fCm').textContent=w?`= ${num1(w*2.54)} cm`:'';
+  }
+  ['fSt','fLb','fWaist'].forEach(id=>$(id).addEventListener('input',updateReadout));
+  $('fSave').addEventListener('click',()=>{
+    const tot=readForm(), d=$('fDate').value, lbIn=parseFloat($('fLb').value||'0'), w=parseFloat($('fWaist').value);
+    const msg=$('fMsg');
+    if(!d){msg.textContent='Pick a date.';return;}
+    if(tot===null||tot<84||tot>420){msg.textContent='Enter your weight in stone and pounds.';return;}
+    if(lbIn<0||lbIn>=14){msg.textContent='Pounds must be 0–13.';return;}
+    const entry={d, lb:tot}; if(w>=20&&w<=60) entry.w=w;
+    const i=store.weights.findIndex(e=>e.d===d);
+    if(i>=0) store.weights[i]=entry; else store.weights.push(entry);
+    save();
+    msg.textContent=(i>=0?'Updated ':'Saved ')+`${niceDate(d)}: ${stlb(tot)} · ${kgTxt(tot)}`;
+    $('fSt').value='';$('fLb').value='';$('fWaist').value='';updateReadout();
+    renderWeight();
+  });
+  $('wTable').addEventListener('click',e=>{
+    const b=e.target.closest('[data-del]'); if(!b) return;
+    if(!confirm(`Delete the reading for ${niceDate(b.dataset.del)}?`)) return;
+    store.weights=store.weights.filter(x=>x.d!==b.dataset.del); save(); renderWeight();
+  });
+  $('expBtn').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`trail-strength-backup-${todayStr()}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  });
+  $('impFile').addEventListener('change',async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{
+      const data=JSON.parse(await f.text());
+      if(!Array.isArray(data.weights)||!data.weights.every(x=>typeof x.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)&&typeof x.lb==='number')) throw new Error('bad');
+      if(!confirm(`Replace current data with this backup (${data.weights.length} readings)?`)) return;
+      store={...store,...data}; save(); renderWeight();
+    }catch(err){ alert('That file isn’t a valid Trail Strength backup.'); }
+    e.target.value='';
+  });
 
   const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 
