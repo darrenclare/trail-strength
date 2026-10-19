@@ -63,6 +63,11 @@ h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
 .hidden{display:none!important}
 #done{text-align:center;padding-top:60px}
 #done h1{font-size:40px}
+/* scale everything up on big desktop screens */
+/* zoom also scales vh, so the figure height is divided back down to keep the player on one screen */
+@media (min-width:1500px){.wrap{zoom:1.2}.figbox svg{max-height:50vh}.figbox{min-height:300px}}
+@media (min-width:1800px){.wrap{zoom:1.4}.figbox svg{max-height:42vh}.figbox{min-height:260px}}
+@media (min-width:2300px){.wrap{zoom:1.65}.figbox svg{max-height:36vh}.figbox{min-height:220px}}
 @media (max-width:860px){.stage{grid-template-columns:1fr}.timer{font-size:64px}.figbox{min-height:260px}}
 </style>
 </head>
