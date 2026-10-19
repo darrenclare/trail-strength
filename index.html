@@ -105,7 +105,7 @@ table.t td .kg{display:block;font-size:12px}
 .ok{color:var(--rest);font-weight:700}.behind{color:#e6c04a;font-weight:700}
 @media (max-width:860px){.two{grid-template-columns:1fr}}
 /* lifts */
-.lrow{display:grid;grid-template-columns:1.3fr 1.2fr 1.4fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.lrow{display:grid;grid-template-columns:1.3fr 1.2fr .8fr 1.4fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .lrow:last-of-type{border-bottom:0}
 .lrow .nm{font-weight:700}.lrow .nm .muted{display:block;font-weight:400}
 .lrow select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 10px;font:inherit;font-size:16px;width:100%}
@@ -115,6 +115,8 @@ table.t td .kg{display:block;font-size:12px}
 .feel button.on[data-f="easy"]{background:var(--rest);color:#111}
 .feel button.on[data-f="right"]{background:var(--accent);color:#111}
 .feel button.on[data-f="hard"]{background:#e05555;color:#111}
+.cnt{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.cnt input{width:100%;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 10px;font:inherit;font-size:16px}
 .lgroup{margin-bottom:22px}.lgroup h3{margin:0 0 10px;font-size:17px}
 .lcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .lcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
@@ -222,7 +224,7 @@ table.t td .kg{display:block;font-size:12px}
 <div id="lifts" class="wrap hidden">
   <div class="hdr"><h1>Trail Strength</h1>
     <nav class="tabs"><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
-  <p class="sub">Dumbbell weights per hand, logged after each session. Rate each one Easy / Right / Hard and the app suggests next time's setting: Easy steps up one click on the dial, two Hards in a row step down one.</p>
+  <p class="sub">Logged after each session: dumbbell weight per hand, reps in your best round, or seconds held. Rate each Easy / Right / Hard — for dumbbell work, Easy steps up one click on the dial and two Hards in a row step down one. Bodyweight work progresses by reps and time.</p>
   <div id="liftCards"></div>
 </div>
 
@@ -669,9 +671,19 @@ function chartSVG(ws){
 /* ================= LIFTS (pure functions) ================= */
 // Dial settings on Darren's 2–24 kg adjustable dumbbells (0 = bodyweight)
 const DIAL = [2,3,4,5,6,7,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
+// Exercises that take a dumbbell weight
 const LIFTABLE = ['gobletSquat','attack','splitSquat','bulgarian','slRdl','farmer','row','wristCurl','revCurl','suitcase','bridge'];
+// What gets counted: reps in best round (one side), or seconds held
+const METRIC = {gobletSquat:'reps',splitSquat:'reps',bulgarian:'reps',slRdl:'reps',row:'reps',wristCurl:'reps',revCurl:'reps',
+  pushup:'reps',inclinePush:'reps',scapPull:'reps',bridge:'reps',birdDog:'reps',deadBug:'reps',
+  attack:'secs',deadHang:'secs',farmer:'secs',suitcase:'secs',kneePlank:'secs',sidePlank:'secs'};
+const LOGGABLE = Object.keys(METRIC);
 const kgLab = kg => kg===0 ? 'Bodyweight' : `${num1(kg)} kg · ${num1(kg*2.20462)} lb`;
-const kgHtml = kg => kg===0 ? 'Bodyweight' : `${num1(kg)} kg <span class="kg">${num1(kg*2.20462)} lb</span>`;
+const nTxt = (ex,n) => n==null ? '' : METRIC[ex]==='secs' ? `${n} s` : `${n} reps`;
+function entryTxt(e){
+  const parts=[]; if(LIFTABLE.includes(e.ex)&&e.kg!=null) parts.push(kgLab(e.kg)); if(e.n!=null) parts.push(nTxt(e.ex,e.n));
+  return parts.join(' × ')||'—';
+}
 function liftHist(lifts, ex){ return lifts.filter(l=>l.ex===ex).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0); }
 function stepDial(kg, dir){
   if(dir>0){ if(kg===0) return DIAL[0]; const nx=DIAL.find(v=>v>kg+1e-9); return nx===undefined?kg:nx; }
@@ -680,18 +692,25 @@ function stepDial(kg, dir){
 function suggestLift(lifts, ex){
   const h=liftHist(lifts,ex); if(!h.length) return null;
   const last=h[h.length-1], prev=h[h.length-2];
+  const beat = last.n!=null ? (METRIC[ex]==='secs' ? `, hold ${nTxt(ex,last.n)}+` : `, beat ${nTxt(ex,last.n)}`) : '';
+  if(!LIFTABLE.includes(ex)){
+    const why = last.feel==='easy' ? `felt easy → push for more${beat}` : last.feel==='hard' ? `felt hard → match it` : `felt right → match or beat it${beat}`;
+    return {kg:null, last, why, dir:0};
+  }
   if(last.feel==='easy') return {kg:stepDial(last.kg,1), last, why:'felt easy → step up', dir:1};
   if(last.feel==='hard' && prev && prev.feel==='hard' && prev.kg===last.kg) return {kg:stepDial(last.kg,-1), last, why:'hard twice → step down', dir:-1};
-  return {kg:last.kg, last, why:last.feel==='hard'?'felt hard → stay':'felt right → stay', dir:0};
+  return {kg:last.kg, last, why:last.feel==='hard'?'felt hard → stay':`felt right → stay${beat}`, dir:0};
 }
+// chart weight for dumbbell work, reps/seconds for bodyweight work
 function sparkSVG(h){
   const W=260,H=64,P=6; if(!h.length) return '';
-  const max=Math.max(...h.map(x=>x.kg),2);
+  const val=x=>LIFTABLE.includes(x.ex)?(x.kg||0):(x.n||0);
+  const max=Math.max(...h.map(val),2);
   const X=i=>h.length===1?W/2:P+i*(W-2*P)/(h.length-1), Y=v=>H-P-(v/max)*(H-2*P);
   const col={easy:'var(--rest)',right:'var(--accent)',hard:'#e05555'};
   let o=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin-top:8px">`;
-  if(h.length>1) o+=`<polyline points="${h.map((x,i)=>X(i)+','+Y(x.kg)).join(' ')}" fill="none" stroke="var(--line)" stroke-width="2"/>`;
-  h.forEach((x,i)=>{ o+=`<circle cx="${X(i)}" cy="${Y(x.kg)}" r="4" fill="${col[x.feel]||'var(--muted)'}"><title>${x.d}: ${kgLab(x.kg)} (${x.feel})</title></circle>`; });
+  if(h.length>1) o+=`<polyline points="${h.map((x,i)=>X(i)+','+Y(val(x))).join(' ')}" fill="none" stroke="var(--line)" stroke-width="2"/>`;
+  h.forEach((x,i)=>{ o+=`<circle cx="${X(i)}" cy="${Y(val(x))}" r="4" fill="${col[x.feel]||'var(--muted)'}"><title>${x.d}: ${entryTxt(x)} (${x.feel})</title></circle>`; });
   return o+'</svg>';
 }
 
@@ -722,45 +741,53 @@ if (typeof document !== 'undefined') {
     for(const [k] of groups){
       groupIds[k]=[];
       for(const m of [0,1]) for(const st of buildSteps(k,m,true))
-        if(st.type==='work'&&LIFTABLE.includes(st.ex)&&!seen.has(st.ex)){ groupIds[k].push(st.ex); seen.add(st.ex); }
+        if(st.type==='work'&&LOGGABLE.includes(st.ex)&&!seen.has(st.ex)){ groupIds[k].push(st.ex); seen.add(st.ex); }
     }
-    LIFTABLE.filter(id=>!seen.has(id)).forEach(id=>groupIds.B.push(id));
+    LOGGABLE.filter(id=>!seen.has(id)).forEach(id=>groupIds.B.push(id));
     let html='';
     for(const [k,title] of groups){
       const ids=groupIds[k];
       if(!ids.length) continue;
       html+=`<div class="lgroup"><h3>${title}</h3><div class="lcards">`+ids.map(id=>{
-        const h=liftHist(store.lifts,id), sg=suggestLift(store.lifts,id);
+        const h=liftHist(store.lifts,id), sg=suggestLift(store.lifts,id), lift=LIFTABLE.includes(id);
         if(!h.length) return `<div class="lcard"><h4>${EX[id].name}</h4><div class="muted">Not logged yet — log it on the screen after your next session.</div></div>`;
-        const last=h[h.length-1], best=Math.max(...h.map(x=>x.kg));
-        const recent=[...h].slice(-4).reverse().map(x=>`${niceDate(x.d,false)}: ${kgLab(x.kg)} <span class="tag-${x.feel}">${x.feel}</span>`).join('<br>');
+        const last=h[h.length-1];
+        const bestTxt = lift ? kgLab(Math.max(...h.map(x=>x.kg||0)))
+          : (h.some(x=>x.n!=null) ? nTxt(id,Math.max(...h.filter(x=>x.n!=null).map(x=>x.n))) : '—');
+        const recent=[...h].slice(-4).reverse().map(x=>`${niceDate(x.d,false)}: ${entryTxt(x)} <span class="tag-${x.feel}">${x.feel}</span>`).join('<br>');
+        const next = lift ? `Next time: <b>${kgLab(sg.kg)}</b> <span class="muted">(${sg.why})</span>` : `Next time: <span class="muted">${sg.why}</span>`;
         return `<div class="lcard"><h4>${EX[id].name}</h4>
-          <div class="big">${kgHtml(last.kg)}</div>
-          <div class="next">Next time: <b>${kgLab(sg.kg)}</b> <span class="muted">(${sg.why})</span></div>
+          <div class="big">${entryTxt(last)}</div>
+          <div class="next">${next}</div>
           ${sparkSVG(h)}
-          <div class="hist">Best ${kgLab(best)} · ${h.length} session${h.length>1?'s':''}<br>${recent}</div></div>`;
+          <div class="hist">Best ${bestTxt} · ${h.length} session${h.length>1?'s':''}<br>${recent}</div></div>`;
       }).join('')+'</div></div>';
     }
     $('liftCards').innerHTML=html;
   }
 
-  /* ---- lift log form on the done screen ---- */
+  /* ---- log form on the done screen ---- */
   function renderLiftForm(steps){
-    const ids=[...new Set(steps.filter(s=>s.type==='work'&&LIFTABLE.includes(s.ex)).map(s=>s.ex))];
+    const work=steps.filter(s=>s.type==='work'&&LOGGABLE.includes(s.ex));
+    const ids=[...new Set(work.map(s=>s.ex))];
     const box=$('liftLog');
     if(!ids.length){ box.classList.add('hidden'); return; }
     box.classList.remove('hidden');
     const opts=sel=>[0,...DIAL].map(v=>`<option value="${v}"${v===sel?' selected':''}>${kgLab(v)}</option>`).join('');
-    box.innerHTML=`<h3>Log today's weights <span class="muted" style="font-weight:400">— per dumbbell</span></h3>`+
+    box.innerHTML=`<h3>Log today's session</h3><p class="muted" style="margin:-6px 0 6px">Weight is per dumbbell. Reps = your best round (one side). Holds = seconds held — change it only if you dropped early.</p>`+
       ids.map(id=>{
-        const sg=suggestLift(store.lifts,id);
-        const sel=sg?sg.kg:(EX[id].db?DIAL[0]:0);
+        const sg=suggestLift(store.lifts,id), lift=LIFTABLE.includes(id), secs=METRIC[id]==='secs';
+        const sel=sg&&lift?sg.kg:(EX[id].db?DIAL[0]:0);
+        const dur=work.find(s=>s.ex===id).dur;
+        const numVal=secs?dur:'';
+        const ph=secs?'secs':(sg&&sg.last.n!=null?String(sg.last.n):'reps');
         return `<div class="lrow" data-ex="${id}">
-          <div class="nm">${EX[id].name}<span class="muted">${sg?'Last: '+kgLab(sg.last.kg)+', '+sg.last.feel:'First time logging'}</span></div>
-          <select>${opts(sel)}</select>
+          <div class="nm">${EX[id].name}<span class="muted">${sg?'Last: '+entryTxt(sg.last)+', '+sg.last.feel:'First time logging'}</span></div>
+          ${lift?`<select>${opts(sel)}</select>`:'<div class="muted">Bodyweight</div>'}
+          <label class="cnt"><input type="number" min="0" max="999" step="1" inputmode="numeric" value="${numVal}" placeholder="${ph}"><span>${secs?'secs':'reps'}</span></label>
           <div class="feel"><button data-f="easy">Easy</button><button data-f="right" class="on">Right</button><button data-f="hard">Hard</button></div>
         </div>`;}).join('')+
-      `<div class="row" style="margin-top:14px"><button class="btn" id="liftSave">Save weights</button><span class="muted" id="liftMsg"></span></div>`;
+      `<div class="row" style="margin-top:14px"><button class="btn" id="liftSave">Save session</button><span class="muted" id="liftMsg"></span></div>`;
     box.querySelectorAll('.feel').forEach(f=>f.addEventListener('click',e=>{
       const b=e.target.closest('button'); if(!b) return;
       f.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
@@ -768,12 +795,14 @@ if (typeof document !== 'undefined') {
     $('liftSave').addEventListener('click',()=>{
       const d=todayStr();
       box.querySelectorAll('.lrow').forEach(r=>{
-        const ex=r.dataset.ex, kg=parseFloat(r.querySelector('select').value), feel=r.querySelector('.feel .on').dataset.f;
+        const ex=r.dataset.ex, feel=r.querySelector('.feel .on').dataset.f, entry={d,ex,feel};
+        const sel=r.querySelector('select'); if(sel) entry.kg=parseFloat(sel.value);
+        const n=parseInt(r.querySelector('.cnt input').value,10); if(!isNaN(n)&&n>=0) entry.n=n;
         store.lifts=store.lifts.filter(l=>!(l.ex===ex&&l.d===d));
-        store.lifts.push({d,ex,kg,feel});
+        store.lifts.push(entry);
       });
       save();
-      $('liftMsg').textContent='Saved. Next session will suggest your weights.';
+      $('liftMsg').textContent='Saved. Next session will show your targets.';
       $('liftSave').disabled=true; $('liftSave').textContent='Saved ✓';
     });
   }
@@ -930,9 +959,10 @@ if (typeof document !== 'undefined') {
     $('pSide').textContent=st.side||'';
     const ld=ex.load?ex.load[store.mode]:'';
     let loadHtml=ld?`<b>Load:</b> ${ld}`:'';
-    if(LIFTABLE.includes(st.ex)&&st.type!=='stretch'&&st.type!=='warm'){
+    if(LOGGABLE.includes(st.ex)&&st.type!=='stretch'&&st.type!=='warm'){
       const sg=suggestLift(store.lifts,st.ex);
-      if(sg) loadHtml=`<b style="color:var(--accent)">Today: ${kgLab(sg.kg)}</b> per dumbbell<br><span class="muted">Last time ${kgLab(sg.last.kg)}, ${sg.why}</span>`+(ld?`<br>${ld}`:'');
+      if(sg&&LIFTABLE.includes(st.ex)) loadHtml=`<b style="color:var(--accent)">Today: ${kgLab(sg.kg)}</b> per dumbbell<br><span class="muted">Last time ${entryTxt(sg.last)}, ${sg.why}</span>`+(ld?`<br>${ld}`:'');
+      else if(sg) loadHtml=(sg.last.n!=null?`<b style="color:var(--accent)">Last time: ${nTxt(st.ex,sg.last.n)}</b><br>`:'')+`<span class="muted">Last time ${sg.why}</span>`+(ld?`<br>${ld}`:'');
     }
     $('pLoad').innerHTML=loadHtml;
     $('pCues').innerHTML=ex.cues.map(c=>`<li>${c}</li>`).join('');
