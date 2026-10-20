@@ -189,11 +189,11 @@ table.t td .kg{display:block;font-size:12px}
       <div class="form">
         <label>Date<input type="date" id="fDate"></label>
         <div class="pair">
-          <label>Stone<input type="number" id="fSt" min="6" max="30" step="1" inputmode="numeric" placeholder="13"></label>
-          <label>Pounds<input type="number" id="fLb" min="0" max="13.75" step="0.25" inputmode="decimal" placeholder="5"></label>
+          <label>Stone<input type="number" id="fSt" min="6" max="30" step="1" inputmode="numeric" placeholder="st"></label>
+          <label>Pounds<input type="number" id="fLb" min="0" max="13.75" step="0.25" inputmode="decimal" placeholder="lb"></label>
         </div>
         <div class="kgread" id="fKg">— kg</div>
-        <label>Waist, inches (optional)<input type="number" id="fWaist" min="20" max="60" step="0.25" inputmode="decimal" placeholder="36"></label>
+        <label>Waist, inches (optional)<input type="number" id="fWaist" min="20" max="60" step="0.25" inputmode="decimal" placeholder="in"></label>
         <div class="kgread small" id="fCm"></div>
         <button class="btn" id="fSave">Save weigh-in</button>
         <div class="muted" id="fMsg"></div>
@@ -780,7 +780,7 @@ if (typeof document !== 'undefined') {
         const sel=sg&&lift?sg.kg:(EX[id].db?DIAL[0]:0);
         const dur=work.find(s=>s.ex===id).dur;
         const numVal=secs?dur:'';
-        const ph=secs?'secs':(sg&&sg.last.n!=null?String(sg.last.n):'reps');
+        const ph=secs?'secs':'reps';
         return `<div class="lrow" data-ex="${id}">
           <div class="nm">${EX[id].name}<span class="muted">${sg?'Last: '+entryTxt(sg.last)+', '+sg.last.feel:'First time logging'}</span></div>
           ${lift?`<select>${opts(sel)}</select>`:'<div class="muted">Bodyweight</div>'}
