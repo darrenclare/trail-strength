@@ -104,6 +104,31 @@ table.t td .kg{display:block;font-size:12px}
 .flag.good{border-color:var(--rest)}.flag.good b{color:var(--rest)}
 .ok{color:var(--rest);font-weight:700}.behind{color:#e6c04a;font-weight:700}
 @media (max-width:860px){.two{grid-template-columns:1fr}}
+/* daily */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.dcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.dcard.met{border-color:var(--rest)}
+.dcard h3{margin:0;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+.dcard .goal{font-size:13px;color:var(--muted);font-weight:500}
+.dcard .goal input{width:56px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:3px 6px;font:inherit;font-size:13px}
+.count{font-size:64px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.count small{font-size:16px;color:var(--muted);font-weight:600;margin-left:6px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns button{flex:1;min-width:56px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:12px 8px;font-weight:700;font-size:17px}
+.btns button.plus{background:var(--accent);color:#111;border-color:var(--accent)}
+.btns button:active{transform:scale(.97)}
+.tick{width:100%;border-radius:12px;padding:18px;font-weight:800;font-size:18px;border:2px solid var(--line);background:var(--panel2);color:var(--text)}
+.tick.on{background:var(--rest);border-color:var(--rest);color:#111}
+.streaks{display:flex;gap:18px;font-size:14px;color:var(--muted)}
+.streaks b{color:var(--text);font-size:20px;display:block}
+.strip{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:3px;width:100%}
+.strip i{height:14px;min-width:0;border-radius:3px;background:var(--panel2);display:block}
+.strip i.half{background:#6b4a2c}.strip i.full{background:var(--accent)}.strip i.chk{background:var(--rest)}
+.strip i.today{box-shadow:inset 0 0 0 2px var(--text)}
+.dcard .muted ul{margin:4px 0 0;padding-left:18px}
+.banner{border-radius:14px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--line);background:var(--panel);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.banner.done{border-color:var(--rest)}
+.banner .items span{margin-right:14px;color:var(--muted)}.banner .items span.y{color:var(--rest);font-weight:700}
 /* lifts */
 .lrow{display:grid;grid-template-columns:1.3fr 1.2fr .8fr 1.4fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .lrow:last-of-type{border-bottom:0}
@@ -137,10 +162,22 @@ table.t td .kg{display:block;font-size:12px}
 </head>
 <body>
 
+<!-- DAILY -->
+<div id="daily" class="wrap hidden">
+  <div class="hdr"><h1>Trail Strength</h1>
+    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+  <div class="row" style="justify-content:space-between;margin:4px 0 16px">
+    <p class="sub" style="margin:0" id="dSub"></p>
+    <div class="seg" id="daySeg"><button data-day="0">Today</button><button data-day="-1">Yesterday</button></div>
+  </div>
+  <div id="dBanner"></div>
+  <div class="dgrid" id="dCards"></div>
+</div>
+
 <!-- HOME -->
 <div id="home" class="wrap">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
   <p class="sub">15–20 minute home sessions for arm pump, leg pump and a stronger lower back. Rotate A → B → C, three times a week.</p>
 
   <div class="row">
@@ -166,7 +203,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- WEIGHT -->
 <div id="weight" class="wrap hidden">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
   <p class="sub">Target 12 st 7 lb · 79.4 kg. Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
 
   <div class="stats" id="wStats"></div>
@@ -223,7 +260,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- LIFTS -->
 <div id="lifts" class="wrap hidden">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
   <p class="sub">Logged after each session: dumbbell weight per hand, reps in your best round, or seconds held. Rate each Easy / Right / Hard — for dumbbell work, Easy steps up one click on the dial and two Hards in a row step down one. Bodyweight work progresses by reps and time.</p>
   <div id="liftCards"></div>
 </div>
@@ -500,6 +537,10 @@ const SESSIONS = {
     ]},
 };
 
+SESSIONS.M = {name:'Morning stretch', tag:'Daily', rounds:0, daily:true, warm:[], work:[],
+  stretch:[{ex:'catCow',d:40},{ex:'hipFlexor',d:30,side:'Left knee down'},{ex:'hipFlexor',d:30,side:'Right knee down'},
+    {ex:'hamstring',d:25,side:'Left leg'},{ex:'hamstring',d:25,side:'Right leg'},{ex:'childPose',d:45}]};
+
 const QUOTES = [
   'Quiet upper body, busy legs. That starts here.',
   'Fundamentals aren\u2019t the boring bit. They\u2019re the whole bit.',
@@ -520,7 +561,7 @@ function buildSteps(key, mode, bar){
   const s=SESSIONS[key], steps=[];
   const pick=v=>Array.isArray(v)?v[mode]:v;
   const resolve=e=>{ const useAlt=!bar&&e.noBar; return {ex:useAlt?e.noBar:pick(e.ex), side:useAlt?(e.noBarSide||''):(e.side||'')}; };
-  steps.push({type:'ready', dur:8, ex:s.warm[0], side:''});
+  steps.push({type:'ready', dur:8, ex:s.warm[0]||s.stretch[0].ex, side:s.warm.length?'':(s.stretch[0].side||'')});
   s.warm.forEach(id=>steps.push({type:'warm', dur:30, ex:id, side:''}));
   for(let r=1;r<=s.rounds;r++){
     s.work.forEach((e,j)=>{
@@ -531,7 +572,7 @@ function buildSteps(key, mode, bar){
       else if(r<s.rounds){ const nx=resolve(s.work[0]); steps.push({type:'break', dur:30, ex:nx.ex, side:nx.side}); }
     });
   }
-  steps.push({type:'rest', dur:10, ex:s.stretch[0].ex, side:s.stretch[0].side||'', toStretch:true});
+  if(s.work.length) steps.push({type:'rest', dur:10, ex:s.stretch[0].ex, side:s.stretch[0].side||'', toStretch:true});
   s.stretch.forEach(x=>steps.push({type:'stretch', dur:x.d, ex:x.ex, side:x.side||''}));
   return steps;
 }
@@ -714,6 +755,37 @@ function sparkSVG(h){
   return o+'</svg>';
 }
 
+/* ================= DAILY (pure functions) ================= */
+const DAILY_ITEMS = [
+  {k:'pu', name:'Press-ups', kind:'count', cue:'Full range: chest to a fist-height off the floor. Knees down is fine.'},
+  {k:'su', name:'Sit-ups / crunches', kind:'count', cue:'Crunch: lower back stays on the floor, lift shoulders only. Easier on your back than full sit-ups.'},
+  {k:'st', name:'Morning stretch', kind:'tick'},
+  {k:'cr', name:'Creatine', kind:'tick', cue:'5 g, any time of day. Consistency matters more than timing.'},
+];
+function addDays(s,n){ const t=new Date(dms(s)+n*DAY); return t.toISOString().slice(0,10); }
+function dayMet(daily, goals, k, d){
+  const v=(daily[d]||{})[k]; const it=DAILY_ITEMS.find(x=>x.k===k);
+  return it.kind==='tick' ? !!v : (v||0)>=Math.max(1,goals[k]||1);
+}
+// streak counts back from today; if today isn't done yet it doesn't break the streak
+function streakOf(daily, goals, k, today){
+  let d=dayMet(daily,goals,k,today)?today:addDays(today,-1), n=0;
+  while(dayMet(daily,goals,k,d)){ n++; d=addDays(d,-1); }
+  return n;
+}
+function bestStreakOf(daily, goals, k){
+  const days=Object.keys(daily).filter(d=>dayMet(daily,goals,k,d)).sort();
+  let best=0, run=0, prev=null;
+  for(const d of days){ run=(prev&&addDays(prev,1)===d)?run+1:1; best=Math.max(best,run); prev=d; }
+  return best;
+}
+function morningDone(daily, goals, d){ return ['pu','su','st'].every(k=>dayMet(daily,goals,k,d)); }
+function morningStreak(daily, goals, today){
+  let d=morningDone(daily,goals,today)?today:addDays(today,-1), n=0;
+  while(morningDone(daily,goals,d)){ n++; d=addDays(d,-1); }
+  return n;
+}
+
 /* ================= APP ================= */
 if (typeof document !== 'undefined') {
   const $=id=>document.getElementById(id);
@@ -725,11 +797,64 @@ if (typeof document !== 'undefined') {
 
   /* ---- tabs ---- */
   if(!Array.isArray(store.lifts)){ store.lifts=[]; save(); }
+  if(!store.daily||typeof store.daily!=='object'){ store.daily={}; save(); }
+  if(!store.goals){ store.goals={pu:1,su:1}; save(); }
+  let dayOff=0;
+
+  /* ---- daily page ---- */
+  function renderDaily(){
+    const today=todayStr(), d=addDays(today,dayOff), rec=store.daily[d]||{};
+    document.querySelectorAll('#daySeg button').forEach(b=>b.classList.toggle('on',+b.dataset.day===dayOff));
+    $('dSub').textContent=(dayOff?'Logging for yesterday, ':'')+niceDate(d)+' · 10 minutes every morning.';
+    const ms=morningStreak(store.daily,store.goals,today), md=morningDone(store.daily,store.goals,d);
+    $('dBanner').innerHTML=`<div class="banner ${md?'done':''}"><div><b style="font-size:18px">${md?'Morning done ✓':'Morning 10'}</b>
+      <div class="muted">Morning streak: <b style="color:var(--text)">${ms} day${ms===1?'':'s'}</b> · best ${bestMorning()}</div></div>
+      <div class="items">${['pu','su','st'].map(k=>`<span class="${dayMet(store.daily,store.goals,k,d)?'y':''}">${dayMet(store.daily,store.goals,k,d)?'✓':'○'} ${DAILY_ITEMS.find(x=>x.k===k).name}</span>`).join('')}</div></div>`;
+    $('dCards').innerHTML=DAILY_ITEMS.map(it=>{
+      const v=rec[it.k], met=dayMet(store.daily,store.goals,it.k,d);
+      const cur=streakOf(store.daily,store.goals,it.k,today), best=bestStreakOf(store.daily,store.goals,it.k);
+      let strip='';
+      for(let i=29;i>=0;i--){ const dd=addDays(today,-i), r=(store.daily[dd]||{})[it.k];
+        let c=''; if(it.kind==='tick') c=r?'chk':''; else c=dayMet(store.daily,store.goals,it.k,dd)?'full':(r>0?'half':'');
+        strip+=`<i class="${c}${dd===d?' today':''}" title="${niceDate(dd)}${it.kind==='count'?': '+(r||0):r?': done':''}"></i>`; }
+      const streaks=`<div class="streaks"><div><b>${cur}</b>day streak</div><div><b>${best}</b>best</div>${it.kind==='count'?`<div><b>${Math.max(0,...Object.values(store.daily).map(x=>x[it.k]||0))}</b>best day</div>`:''}</div>`;
+      if(it.kind==='count') return `<div class="dcard ${met?'met':''}" data-k="${it.k}">
+        <h3>${it.name}<span class="goal">Daily goal <input type="number" min="1" max="500" value="${store.goals[it.k]||1}" data-goal="${it.k}"></span></h3>
+        <div class="count">${v||0}<small>${met?'✓ goal hit':'today'}</small></div>
+        <div class="btns"><button data-add="-1">−1</button><button class="plus" data-add="1">+1</button><button class="plus" data-add="5">+5</button><button class="plus" data-add="10">+10</button></div>
+        <div class="muted">${it.cue}</div>${streaks}<div class="strip">${strip}</div></div>`;
+      const extra = it.k==='st'
+        ? `<div class="muted">Guided, about 3½ min: cat-cow, hip flexors, hamstrings, child's pose. Finishing it ticks this off.</div><button class="btn ghost" id="stretchGo">▶ Start guided stretch</button>`
+        : `<div class="muted">${it.cue}</div>`;
+      return `<div class="dcard ${met?'met':''}" data-k="${it.k}"><h3>${it.name}</h3>
+        <button class="tick ${v?'on':''}" data-tick="${it.k}">${v?'✓ Done':'Tap when done'}</button>${extra}${streaks}<div class="strip">${strip}</div></div>`;
+    }).join('');
+  }
+  function bestMorning(){
+    const days=Object.keys(store.daily).filter(d=>morningDone(store.daily,store.goals,d)).sort();
+    let best=0,run=0,prev=null; for(const d of days){ run=(prev&&addDays(prev,1)===d)?run+1:1; best=Math.max(best,run); prev=d; } return best;
+  }
+  function setDaily(k,fn){
+    const d=addDays(todayStr(),dayOff), rec=store.daily[d]||(store.daily[d]={});
+    rec[k]=fn(rec[k]); save(); renderDaily();
+  }
+  $('daySeg').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; dayOff=+b.dataset.day; renderDaily();});
+  $('dCards').addEventListener('click',e=>{
+    const a=e.target.closest('[data-add]'); if(a){ const k=a.closest('.dcard').dataset.k, n=+a.dataset.add; setDaily(k,v=>Math.max(0,(v||0)+n)); return; }
+    const t=e.target.closest('[data-tick]'); if(t){ setDaily(t.dataset.tick,v=>!v); return; }
+    if(e.target.closest('#stretchGo')) start('M');
+  });
+  $('dCards').addEventListener('change',e=>{
+    const g=e.target.closest('[data-goal]'); if(!g) return;
+    const n=parseInt(g.value,10); if(n>=1){ store.goals[g.dataset.goal]=n; save(); renderDaily(); }
+  });
   function showTab(tab){
-    for(const id of ['home','lifts','weight']) $(id).classList.toggle('hidden',tab!==id);
+    for(const id of ['daily','home','lifts','weight']) $(id).classList.toggle('hidden',tab!==id);
+    $('player').classList.add('hidden');
     $('done').classList.add('hidden');
     document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-    if(tab==='weight') renderWeight(); else if(tab==='lifts') renderLifts(); else renderHome();
+    if(tab==='weight') renderWeight(); else if(tab==='lifts') renderLifts(); else if(tab==='daily'){ dayOff=0; renderDaily(); } else renderHome();
+    P.lastTab=tab;
     window.scrollTo(0,0);
   }
 
@@ -898,7 +1023,7 @@ if (typeof document !== 'undefined') {
     document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.mode===store.mode));
     $('barChk').checked=store.bar; $('soundChk').checked=store.sound; $('voiceChk').checked=store.voice;
     const nx=nextSuggested();
-    $('cards').innerHTML=Object.entries(SESSIONS).map(([k,s])=>{
+    $('cards').innerHTML=Object.entries(SESSIONS).filter(([k,s])=>!s.daily).map(([k,s])=>{
       const steps=buildSteps(k,store.mode,store.bar);
       const names=[...new Set(steps.filter(x=>x.type==='work').map(x=>EX[x.ex].name))];
       const h=store.history[k];
@@ -936,8 +1061,8 @@ if (typeof document !== 'undefined') {
   function start(key){
     P.key=key; P.steps=buildSteps(key,store.mode,store.bar); P.total=totalSecs(P.steps);
     P.sumBefore=[]; let acc=0; P.steps.forEach(s=>{P.sumBefore.push(acc);acc+=s.dur;});
-    $('home').classList.add('hidden'); $('done').classList.add('hidden'); $('player').classList.remove('hidden');
-    $('pTitle').textContent=SESSIONS[key].name+(store.mode?' · Progressed':' · Foundation');
+    for(const id of ['daily','home','lifts','weight','done']) $(id).classList.add('hidden'); $('player').classList.remove('hidden');
+    $('pTitle').textContent=SESSIONS[key].name+(SESSIONS[key].daily?'':(store.mode?' · Progressed':' · Foundation'));
     try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
     P.running=true; $('playBtn').textContent='Pause';
     enter(0);
@@ -986,6 +1111,11 @@ if (typeof document !== 'undefined') {
 
   function finish(){
     P.running=false;
+    if(SESSIONS[P.key].daily){
+      const d=todayStr(); (store.daily[d] ||= {}).st=true; save();
+      beep(660,0.2); setTimeout(()=>beep(990,0.4),220); say('Stretch done.');
+      showTab('daily'); return;
+    }
     const h=store.history[P.key]||{count:0,last:0}; h.count++; h.last=Date.now(); store.history[P.key]=h; save();
     $('player').classList.add('hidden'); $('done').classList.remove('hidden');
     $('doneSub').textContent=`${SESSIONS[P.key].name} complete — that\u2019s ${h.count} in total. Next up: Session ${nextSuggested()}.`;
@@ -994,7 +1124,7 @@ if (typeof document !== 'undefined') {
     beep(660,0.2); setTimeout(()=>beep(990,0.4),220); say('Session done. Good work.');
   }
 
-  function exit(){ P.running=false; try{speechSynthesis.cancel();}catch(e){} $('player').classList.add('hidden'); showTab('home'); }
+  function exit(){ P.running=false; try{speechSynthesis.cancel();}catch(e){} $('player').classList.add('hidden'); showTab(SESSIONS[P.key]&&SESSIONS[P.key].daily?'daily':'home'); }
   function togglePlay(){ P.running=!P.running; $('playBtn').textContent=P.running?'Pause':'Resume'; if(!P.running){try{speechSynthesis.cancel();}catch(e){}} }
 
   $('playBtn').onclick=togglePlay;
@@ -1030,7 +1160,7 @@ if (typeof document !== 'undefined') {
     }
     requestAnimationFrame(loop);
   }
-  showTab('home');
+  showTab('daily');
   requestAnimationFrame(loop);
 }
 </script>
