@@ -145,6 +145,12 @@ table.t td .kg{display:block;font-size:12px}
 .cal .dow{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
 .cal .c{aspect-ratio:1.25;border-radius:7px;border:0;font:inherit;font-size:13px;font-weight:600;background:var(--rest);color:#0f2a20;padding:0}
 .cal .c.dr{background:#e05555;color:#2a0f0f}
+.cal .c.un{background:#3a424e;color:var(--muted)}
+.tick.claim{background:var(--panel2);border:2px dashed var(--rest);color:var(--rest)}
+.tick.drank{background:#3a1f1f;border-color:#e05555;color:#f0a0a0}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px;padding:4px}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
+.pop{animation:pop .45s ease-out}
 .cal .c.off{background:var(--panel2);color:#4a525e;cursor:default}
 .cal .c.today{box-shadow:inset 0 0 0 2px var(--text)}
 .cal .ms{font-size:13px;color:var(--muted);margin-top:8px}
@@ -812,22 +818,33 @@ function morningStreak(daily, goals, today){
 }
 
 /* ================= ALCOHOL-FREE (pure functions) ================= */
+// Each day is 'af' (ticked), 'dr' (drink day) or unlogged. Today, if unlogged, is pending and never counts against.
 const AF_MILESTONES=[7,14,30,60,90,100,180,365,500,730,1000];
 function daysBetween(a,b){ return Math.round((dms(b)-dms(a))/DAY); }
-function afStats(drinks, start, today){
-  const set=new Set(drinks.filter(d=>d>=start&&d<=today));
-  const total=daysBetween(start,today)+1;
-  let cur=0, d=today; while(d>=start&&!set.has(d)){ cur++; d=addDays(d,-1); }
-  let best=0, run=0; for(let i=0, x=start; i<total; i++, x=addDays(x,1)){ run=set.has(x)?0:run+1; best=Math.max(best,run); }
-  const win=Math.min(30,total); let wDrink=0; for(let i=0;i<win;i++) if(set.has(addDays(today,-i))) wDrink++;
+function afState(A,d){ return A.af.includes(d)?'af':A.drinks.includes(d)?'dr':''; }
+function afStats(A, today){
+  const af=new Set(A.af), dr=new Set(A.drinks), start=A.start;
+  const pending=!af.has(today)&&!dr.has(today);
+  const total=daysBetween(start,today)+1-(pending?1:0);
+  let cur=0, d=pending?addDays(today,-1):today; while(d>=start&&af.has(d)){ cur++; d=addDays(d,-1); }
+  let best=0, run=0, afTotal=0, drTotal=0;
+  for(let i=0, x=start; x<=today; i++, x=addDays(x,1)){ if(af.has(x)){ run++; afTotal++; } else { run=0; if(dr.has(x)) drTotal++; } best=Math.max(best,run); }
+  const win=Math.min(30,total); let wAF=0; for(let i=pending?1:0, n=0; n<win; i++, n++) if(af.has(addDays(today,-i))) wAF++;
   const next=AF_MILESTONES.find(m=>m>cur)||null;
-  return {cur, best, total, afTotal:total-set.size, drinkTotal:set.size, win, winAF:win-wDrink, next};
+  return {cur, best, total:Math.max(total,0), afTotal, drinkTotal:drTotal, unlogged:Math.max(0,total-afTotal-drTotal), win, winAF:wAF, next, pending};
 }
-function monthAF(drinks, start, today, ym){
+function monthAF(A, today, ym){
   const [y,m]=ym.split('-').map(Number), n=new Date(Date.UTC(y,m,0)).getUTCDate();
-  let tracked=0, dr=0; const set=new Set(drinks);
-  for(let i=1;i<=n;i++){ const d=`${ym}-${String(i).padStart(2,'0')}`; if(d<start||d>today) continue; tracked++; if(set.has(d)) dr++; }
-  return {tracked, af:tracked-dr, dr};
+  let tracked=0, af=0, dr=0;
+  for(let i=1;i<=n;i++){ const d=`${ym}-${String(i).padStart(2,'0')}`; if(d<A.start||d>today) continue;
+    const s=afState(A,d); if(d===today&&!s) continue; tracked++; if(s==='af') af++; else if(s==='dr') dr++; }
+  return {tracked, af, dr};
+}
+// fill unlogged past days (start..yesterday) as alcohol-free, except known drink days
+function afBackfill(A, today){
+  const af=new Set(A.af), dr=new Set(A.drinks);
+  for(let x=A.start; x<today; x=addDays(x,1)) if(!dr.has(x)) af.add(x);
+  A.af=[...af].sort();
 }
 
 /* ================= APP ================= */
@@ -844,42 +861,52 @@ if (typeof document !== 'undefined') {
   if(!store.daily||typeof store.daily!=='object'){ store.daily={}; save(); }
   if(!store.goals){ store.goals={pu:1,su:1}; save(); }
   if(!store.af){ store.af={start:'2026-09-01', drinks:[]}; save(); }
+  if(!Array.isArray(store.af.af)){ const t=new Date(); store.af.af=[]; afBackfill(store.af,`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`); save(); }
   let calYM=null;
-  function renderAF(){
-    const today=todayStr(), d=addDays(today,dayOff), A=store.af, s=afStats(A.drinks,A.start,today);
+  function renderAF(celebrate){
+    const today=todayStr(), d=addDays(today,dayOff), A=store.af, s=afStats(A,today);
     if(!calYM) calYM=today.slice(0,7);
-    const drankD=A.drinks.includes(d);
-    const prevNext=s.next?Math.max(0,...AF_MILESTONES.filter(m=>m<=s.cur)):0;
-    const pct=s.next?100*(s.cur-prevNext)/(s.next-prevNext):100;
+    const st=afState(A,d), label=dayOff?'yesterday':'today';
+    const prevM=s.next?Math.max(0,...AF_MILESTONES.filter(m=>m<=s.cur)):0;
+    const pct=s.next?100*(s.cur-prevM)/(s.next-prevM):100;
     const [y,m]=calYM.split('-').map(Number), first=new Date(Date.UTC(y,m-1,1)), nDays=new Date(Date.UTC(y,m,0)).getUTCDate();
-    const lead=(first.getUTCDay()+6)%7, set=new Set(A.drinks);
+    const lead=(first.getUTCDay()+6)%7;
     let cells=['M','T','W','T','F','S','S'].map(x=>`<div class="dow">${x}</div>`).join('')+'<div></div>'.repeat(lead);
-    for(let i=1;i<=nDays;i++){ const dd=`${calYM}-${String(i).padStart(2,'0')}`, off=dd<A.start||dd>today;
-      cells+=`<button class="c ${off?'off':set.has(dd)?'dr':''} ${dd===today?'today':''}" ${off?'disabled':''} data-cal="${dd}" title="${niceDate(dd)}${off?'':set.has(dd)?': drink day':': alcohol-free'}">${i}</button>`; }
-    const ms=monthAF(A.drinks,A.start,today,calYM);
+    for(let i=1;i<=nDays;i++){ const dd=`${calYM}-${String(i).padStart(2,'0')}`, off=dd<A.start||dd>today, ss=off?'':afState(A,dd);
+      const cls=off?'off':ss==='af'?'':ss==='dr'?'dr':'un';
+      cells+=`<button class="c ${cls} ${dd===today?'today':''}" ${off?'disabled':''} data-cal="${dd}" title="${niceDate(dd)}${off?'':ss==='af'?': alcohol-free':ss==='dr'?': drink day':': not logged'}">${i}</button>`; }
+    const ms=monthAF(A,today,calYM);
     const monthName=first.toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'});
+    const hit=celebrate&&AF_MILESTONES.includes(s.cur);
+    let action;
+    if(st==='af') action=`<button class="tick on ${celebrate?'pop':''}" id="afTick">✓ Alcohol-free ${label}${celebrate?(hit?` — ${s.cur} days! 🎉`:' — nice one'):''}</button>`;
+    else if(st==='dr') action=`<button class="tick drank" id="afTick">Drank ${label} — tap to change to alcohol-free</button>`;
+    else action=`<button class="tick claim" id="afTick">Tap: alcohol-free ${label} ✓</button>`;
+    const small = st==='dr' ? `<button class="linkbtn" data-afclear>Clear ${label}</button>` : `<button class="linkbtn" data-afdrink>I had a drink ${label}</button>`;
     $('afCard').innerHTML=`<div class="af"><div>
         <h3>Alcohol-free <span class="goal">Since <input type="date" id="afStart" value="${A.start}" max="${today}"></span></h3>
         <div class="afnums">
-          <div><div class="n ratio">${s.afTotal}/${s.total}</div><div class="l">AF days since ${niceDate(A.start)} · ${Math.round(100*s.afTotal/s.total)}%</div></div>
-          <div><div class="n">${s.cur}</div><div class="l">day streak</div></div>
+          <div><div class="n ratio">${s.afTotal}/${s.total}</div><div class="l">AF days since ${niceDate(A.start)}${s.total?' · '+Math.round(100*s.afTotal/s.total)+'%':''}</div></div>
+          <div><div class="n ${celebrate?'pop':''}">${s.cur}</div><div class="l">day streak</div></div>
         </div>
         <div class="afnums">
           <div><div class="n2">${s.best}</div><div class="l">best streak</div></div>
           <div><div class="n2">${s.winAF}/${s.win}</div><div class="l">last ${s.win} days</div></div>
         </div>
+        ${s.unlogged?`<div class="flag warn" style="margin:0 0 10px"><b>${s.unlogged} day${s.unlogged>1?'s':''} not logged.</b> Tap the grey days on the calendar to fill them in.</div>`:''}
         ${s.next?`<div class="muted">Next milestone: <b style="color:var(--text)">${s.next} days</b> — ${s.next-s.cur} to go</div><div class="pbar"><i style="width:${pct}%"></i></div>`:''}
-        <div class="row" style="margin-top:14px"><button class="tick ${drankD?'':'on'}" id="afToggle" style="flex:1">${drankD?`Drank ${dayOff?'yesterday':'today'} — tap to undo`:`✓ Alcohol-free ${dayOff?'yesterday':'today'} — tap if you drank`}</button></div>
+        <div style="margin-top:14px">${action}</div>
+        <div style="text-align:center;margin-top:8px">${small}</div>
       </div>
       <div class="cal"><div class="mh"><button data-calnav="-1">‹</button><span>${monthName}</span><button data-calnav="1" ${calYM>=today.slice(0,7)?'disabled':''}>›</button></div>
         <div class="grid">${cells}</div>
         ${afHistory(A,today)}
-        <div class="ms">${ms.tracked?`${monthName.split(' ')[0]}: <b style="color:var(--text)">${ms.af}/${ms.tracked}</b> alcohol-free`:'Before your start date'} · Tap a day to mark or clear a drink day.</div>
+        <div class="ms">${ms.tracked?`${monthName.split(' ')[0]}: <b style="color:var(--text)">${ms.af}/${ms.tracked}</b> alcohol-free`:'Before your start date'} · Tap a day: alcohol-free → drink → not logged.</div>
       </div></div>`;
   }
   function afHistory(A,today){
     const rows=[]; let ym=A.start.slice(0,7);
-    while(ym<=today.slice(0,7)){ const r=monthAF(A.drinks,A.start,today,ym); if(r.tracked) rows.push([ym,r]);
+    while(ym<=today.slice(0,7)){ const r=monthAF(A,today,ym); if(r.tracked) rows.push([ym,r]);
       const [y,m]=ym.split('-').map(Number); ym=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7); }
     if(rows.length<2) return '';
     return '<div class="afhist">'+rows.reverse().map(([ym,r])=>{
@@ -887,16 +914,21 @@ if (typeof document !== 'undefined') {
       return `<div class="hr" data-ym="${ym}"><span>${lab}</span><div class="hb"><i style="width:${pc}%"></i></div><b>${r.af}/${r.tracked}</b></div>`;
     }).join('')+'</div>';
   }
-  function toggleDrink(dd){
-    const A=store.af, i=A.drinks.indexOf(dd);
-    if(i>=0) A.drinks.splice(i,1); else A.drinks.push(dd);
-    A.drinks.sort(); save(); renderAF();
+  function setAF(dd,state){
+    const A=store.af;
+    A.af=A.af.filter(x=>x!==dd); A.drinks=A.drinks.filter(x=>x!==dd);
+    if(state==='af') A.af.push(dd); else if(state==='dr') A.drinks.push(dd);
+    A.af.sort(); A.drinks.sort(); save();
   }
   $('afCard').addEventListener('click',e=>{
-    const c=e.target.closest('[data-cal]'); if(c&&!c.disabled){ toggleDrink(c.dataset.cal); return; }
+    const c=e.target.closest('[data-cal]');
+    if(c&&!c.disabled){ const dd=c.dataset.cal, s=afState(store.af,dd); setAF(dd, s==='af'?'dr':s==='dr'?'':'af'); renderAF(); return; }
     const hr=e.target.closest('[data-ym]'); if(hr){ calYM=hr.dataset.ym; renderAF(); return; }
     const n=e.target.closest('[data-calnav]'); if(n&&!n.disabled){ const [y,m]=calYM.split('-').map(Number); const t=new Date(Date.UTC(y,m-1+(+n.dataset.calnav),1)); calYM=t.toISOString().slice(0,7); renderAF(); return; }
-    if(e.target.closest('#afToggle')) toggleDrink(addDays(todayStr(),dayOff));
+    const dd=addDays(todayStr(),dayOff);
+    if(e.target.closest('#afTick')){ const s=afState(store.af,dd); if(s==='af'){ setAF(dd,''); renderAF(); } else { setAF(dd,'af'); renderAF(true); beep(880,0.12); setTimeout(()=>beep(1320,0.25),120); } return; }
+    if(e.target.closest('[data-afdrink]')){ setAF(dd,'dr'); renderAF(); return; }
+    if(e.target.closest('[data-afclear]')){ setAF(dd,''); renderAF(); return; }
   });
   $('afCard').addEventListener('change',e=>{
     if(e.target.id!=='afStart'||!e.target.value) return;
