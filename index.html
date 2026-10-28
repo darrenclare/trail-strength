@@ -148,6 +148,10 @@ table.t td .kg{display:block;font-size:12px}
 .cal .c.off{background:var(--panel2);color:#4a525e;cursor:default}
 .cal .c.today{box-shadow:inset 0 0 0 2px var(--text)}
 .cal .ms{font-size:13px;color:var(--muted);margin-top:8px}
+.afhist{margin-top:12px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+.afhist .hr{display:grid;grid-template-columns:56px 1fr 56px;gap:10px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+.afhist .hr b{color:var(--text);text-align:right}
+.afhist .hb{height:10px;background:#e05555;border-radius:5px;overflow:hidden}.afhist .hb i{display:block;height:100%;background:var(--rest)}
 @media (max-width:860px){.af{grid-template-columns:1fr}}
 /* lifts */
 .lrow{display:grid;grid-template-columns:1.3fr 1.2fr .8fr 1.4fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -857,20 +861,31 @@ if (typeof document !== 'undefined') {
     $('afCard').innerHTML=`<div class="af"><div>
         <h3>Alcohol-free <span class="goal">Since <input type="date" id="afStart" value="${A.start}" max="${today}"></span></h3>
         <div class="afnums">
+          <div><div class="n ratio">${s.afTotal}/${s.total}</div><div class="l">AF days since ${niceDate(A.start)} · ${Math.round(100*s.afTotal/s.total)}%</div></div>
           <div><div class="n">${s.cur}</div><div class="l">day streak</div></div>
-          <div><div class="n ratio">${s.winAF}/${s.win}</div><div class="l">AF in last ${s.win} days</div></div>
         </div>
         <div class="afnums">
-          <div><div class="n2">${s.afTotal}/${s.total}</div><div class="l">AF since ${niceDate(A.start)}</div></div>
           <div><div class="n2">${s.best}</div><div class="l">best streak</div></div>
+          <div><div class="n2">${s.winAF}/${s.win}</div><div class="l">last ${s.win} days</div></div>
         </div>
         ${s.next?`<div class="muted">Next milestone: <b style="color:var(--text)">${s.next} days</b> — ${s.next-s.cur} to go</div><div class="pbar"><i style="width:${pct}%"></i></div>`:''}
         <div class="row" style="margin-top:14px"><button class="tick ${drankD?'':'on'}" id="afToggle" style="flex:1">${drankD?`Drank ${dayOff?'yesterday':'today'} — tap to undo`:`✓ Alcohol-free ${dayOff?'yesterday':'today'} — tap if you drank`}</button></div>
       </div>
       <div class="cal"><div class="mh"><button data-calnav="-1">‹</button><span>${monthName}</span><button data-calnav="1" ${calYM>=today.slice(0,7)?'disabled':''}>›</button></div>
         <div class="grid">${cells}</div>
+        ${afHistory(A,today)}
         <div class="ms">${ms.tracked?`${monthName.split(' ')[0]}: <b style="color:var(--text)">${ms.af}/${ms.tracked}</b> alcohol-free`:'Before your start date'} · Tap a day to mark or clear a drink day.</div>
       </div></div>`;
+  }
+  function afHistory(A,today){
+    const rows=[]; let ym=A.start.slice(0,7);
+    while(ym<=today.slice(0,7)){ const r=monthAF(A.drinks,A.start,today,ym); if(r.tracked) rows.push([ym,r]);
+      const [y,m]=ym.split('-').map(Number); ym=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7); }
+    if(rows.length<2) return '';
+    return '<div class="afhist">'+rows.reverse().map(([ym,r])=>{
+      const lab=new Date(dms(ym+'-01')).toLocaleDateString('en-GB',{month:'short',year:'2-digit',timeZone:'UTC'}), pc=100*r.af/r.tracked;
+      return `<div class="hr" data-ym="${ym}"><span>${lab}</span><div class="hb"><i style="width:${pc}%"></i></div><b>${r.af}/${r.tracked}</b></div>`;
+    }).join('')+'</div>';
   }
   function toggleDrink(dd){
     const A=store.af, i=A.drinks.indexOf(dd);
@@ -879,6 +894,7 @@ if (typeof document !== 'undefined') {
   }
   $('afCard').addEventListener('click',e=>{
     const c=e.target.closest('[data-cal]'); if(c&&!c.disabled){ toggleDrink(c.dataset.cal); return; }
+    const hr=e.target.closest('[data-ym]'); if(hr){ calYM=hr.dataset.ym; renderAF(); return; }
     const n=e.target.closest('[data-calnav]'); if(n&&!n.disabled){ const [y,m]=calYM.split('-').map(Number); const t=new Date(Date.UTC(y,m-1+(+n.dataset.calnav),1)); calYM=t.toISOString().slice(0,7); renderAF(); return; }
     if(e.target.closest('#afToggle')) toggleDrink(addDays(todayStr(),dayOff));
   });
