@@ -129,6 +129,26 @@ table.t td .kg{display:block;font-size:12px}
 .banner{border-radius:14px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--line);background:var(--panel);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .banner.done{border-color:var(--rest)}
 .banner .items span{margin-right:14px;color:var(--muted)}.banner .items span.y{color:var(--rest);font-weight:700}
+/* alcohol-free */
+.af{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;display:grid;grid-template-columns:1.1fr 1fr;gap:22px}
+.af h3{margin:0 0 6px;font-size:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.af .goal{font-size:13px;color:var(--muted);font-weight:500}
+.af .goal input{width:150px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:4px 8px;font:inherit;font-size:13px;color-scheme:dark}
+.afnums{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 10px}
+.afnums .n{font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.afnums .n.ratio{color:var(--rest)}
+.afnums .l{font-size:13px;color:var(--muted);margin-top:4px}
+.afnums .n2{font-size:26px;font-weight:800;line-height:1.1}
+.cal .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700}
+.cal .mh button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:4px 12px}
+.cal .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .dow{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+.cal .c{aspect-ratio:1.25;border-radius:7px;border:0;font:inherit;font-size:13px;font-weight:600;background:var(--rest);color:#0f2a20;padding:0}
+.cal .c.dr{background:#e05555;color:#2a0f0f}
+.cal .c.off{background:var(--panel2);color:#4a525e;cursor:default}
+.cal .c.today{box-shadow:inset 0 0 0 2px var(--text)}
+.cal .ms{font-size:13px;color:var(--muted);margin-top:8px}
+@media (max-width:860px){.af{grid-template-columns:1fr}}
 /* lifts */
 .lrow{display:grid;grid-template-columns:1.3fr 1.2fr .8fr 1.4fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .lrow:last-of-type{border-bottom:0}
@@ -170,6 +190,7 @@ table.t td .kg{display:block;font-size:12px}
     <p class="sub" style="margin:0" id="dSub"></p>
     <div class="seg" id="daySeg"><button data-day="0">Today</button><button data-day="-1">Yesterday</button></div>
   </div>
+  <div id="afCard"></div>
   <div id="dBanner"></div>
   <div class="dgrid" id="dCards"></div>
 </div>
@@ -786,6 +807,25 @@ function morningStreak(daily, goals, today){
   return n;
 }
 
+/* ================= ALCOHOL-FREE (pure functions) ================= */
+const AF_MILESTONES=[7,14,30,60,90,100,180,365,500,730,1000];
+function daysBetween(a,b){ return Math.round((dms(b)-dms(a))/DAY); }
+function afStats(drinks, start, today){
+  const set=new Set(drinks.filter(d=>d>=start&&d<=today));
+  const total=daysBetween(start,today)+1;
+  let cur=0, d=today; while(d>=start&&!set.has(d)){ cur++; d=addDays(d,-1); }
+  let best=0, run=0; for(let i=0, x=start; i<total; i++, x=addDays(x,1)){ run=set.has(x)?0:run+1; best=Math.max(best,run); }
+  const win=Math.min(30,total); let wDrink=0; for(let i=0;i<win;i++) if(set.has(addDays(today,-i))) wDrink++;
+  const next=AF_MILESTONES.find(m=>m>cur)||null;
+  return {cur, best, total, afTotal:total-set.size, drinkTotal:set.size, win, winAF:win-wDrink, next};
+}
+function monthAF(drinks, start, today, ym){
+  const [y,m]=ym.split('-').map(Number), n=new Date(Date.UTC(y,m,0)).getUTCDate();
+  let tracked=0, dr=0; const set=new Set(drinks);
+  for(let i=1;i<=n;i++){ const d=`${ym}-${String(i).padStart(2,'0')}`; if(d<start||d>today) continue; tracked++; if(set.has(d)) dr++; }
+  return {tracked, af:tracked-dr, dr};
+}
+
 /* ================= APP ================= */
 if (typeof document !== 'undefined') {
   const $=id=>document.getElementById(id);
@@ -799,10 +839,58 @@ if (typeof document !== 'undefined') {
   if(!Array.isArray(store.lifts)){ store.lifts=[]; save(); }
   if(!store.daily||typeof store.daily!=='object'){ store.daily={}; save(); }
   if(!store.goals){ store.goals={pu:1,su:1}; save(); }
+  if(!store.af){ store.af={start:'2026-09-01', drinks:[]}; save(); }
+  let calYM=null;
+  function renderAF(){
+    const today=todayStr(), d=addDays(today,dayOff), A=store.af, s=afStats(A.drinks,A.start,today);
+    if(!calYM) calYM=today.slice(0,7);
+    const drankD=A.drinks.includes(d);
+    const prevNext=s.next?Math.max(0,...AF_MILESTONES.filter(m=>m<=s.cur)):0;
+    const pct=s.next?100*(s.cur-prevNext)/(s.next-prevNext):100;
+    const [y,m]=calYM.split('-').map(Number), first=new Date(Date.UTC(y,m-1,1)), nDays=new Date(Date.UTC(y,m,0)).getUTCDate();
+    const lead=(first.getUTCDay()+6)%7, set=new Set(A.drinks);
+    let cells=['M','T','W','T','F','S','S'].map(x=>`<div class="dow">${x}</div>`).join('')+'<div></div>'.repeat(lead);
+    for(let i=1;i<=nDays;i++){ const dd=`${calYM}-${String(i).padStart(2,'0')}`, off=dd<A.start||dd>today;
+      cells+=`<button class="c ${off?'off':set.has(dd)?'dr':''} ${dd===today?'today':''}" ${off?'disabled':''} data-cal="${dd}" title="${niceDate(dd)}${off?'':set.has(dd)?': drink day':': alcohol-free'}">${i}</button>`; }
+    const ms=monthAF(A.drinks,A.start,today,calYM);
+    const monthName=first.toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'});
+    $('afCard').innerHTML=`<div class="af"><div>
+        <h3>Alcohol-free <span class="goal">Since <input type="date" id="afStart" value="${A.start}" max="${today}"></span></h3>
+        <div class="afnums">
+          <div><div class="n">${s.cur}</div><div class="l">day streak</div></div>
+          <div><div class="n ratio">${s.winAF}/${s.win}</div><div class="l">AF in last ${s.win} days</div></div>
+        </div>
+        <div class="afnums">
+          <div><div class="n2">${s.afTotal}/${s.total}</div><div class="l">AF since ${niceDate(A.start)}</div></div>
+          <div><div class="n2">${s.best}</div><div class="l">best streak</div></div>
+        </div>
+        ${s.next?`<div class="muted">Next milestone: <b style="color:var(--text)">${s.next} days</b> — ${s.next-s.cur} to go</div><div class="pbar"><i style="width:${pct}%"></i></div>`:''}
+        <div class="row" style="margin-top:14px"><button class="tick ${drankD?'':'on'}" id="afToggle" style="flex:1">${drankD?`Drank ${dayOff?'yesterday':'today'} — tap to undo`:`✓ Alcohol-free ${dayOff?'yesterday':'today'} — tap if you drank`}</button></div>
+      </div>
+      <div class="cal"><div class="mh"><button data-calnav="-1">‹</button><span>${monthName}</span><button data-calnav="1" ${calYM>=today.slice(0,7)?'disabled':''}>›</button></div>
+        <div class="grid">${cells}</div>
+        <div class="ms">${ms.tracked?`${monthName.split(' ')[0]}: <b style="color:var(--text)">${ms.af}/${ms.tracked}</b> alcohol-free`:'Before your start date'} · Tap a day to mark or clear a drink day.</div>
+      </div></div>`;
+  }
+  function toggleDrink(dd){
+    const A=store.af, i=A.drinks.indexOf(dd);
+    if(i>=0) A.drinks.splice(i,1); else A.drinks.push(dd);
+    A.drinks.sort(); save(); renderAF();
+  }
+  $('afCard').addEventListener('click',e=>{
+    const c=e.target.closest('[data-cal]'); if(c&&!c.disabled){ toggleDrink(c.dataset.cal); return; }
+    const n=e.target.closest('[data-calnav]'); if(n&&!n.disabled){ const [y,m]=calYM.split('-').map(Number); const t=new Date(Date.UTC(y,m-1+(+n.dataset.calnav),1)); calYM=t.toISOString().slice(0,7); renderAF(); return; }
+    if(e.target.closest('#afToggle')) toggleDrink(addDays(todayStr(),dayOff));
+  });
+  $('afCard').addEventListener('change',e=>{
+    if(e.target.id!=='afStart'||!e.target.value) return;
+    store.af.start=e.target.value; save(); renderAF();
+  });
   let dayOff=0;
 
   /* ---- daily page ---- */
   function renderDaily(){
+    renderAF();
     const today=todayStr(), d=addDays(today,dayOff), rec=store.daily[d]||{};
     document.querySelectorAll('#daySeg button').forEach(b=>b.classList.toggle('on',+b.dataset.day===dayOff));
     $('dSub').textContent=(dayOff?'Logging for yesterday, ':'')+niceDate(d)+' · 10 minutes every morning.';
