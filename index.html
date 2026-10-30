@@ -42,8 +42,11 @@ h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
 #player .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 #player .top .title{font-weight:700}
 .stage{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
-.figbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;align-items:center;justify-content:center;min-height:380px}
-.figbox svg{width:100%;height:auto;max-height:62vh}
+.figbox{background:#03060d;overflow:hidden;border:1px solid var(--line);border-radius:16px;padding:0;display:flex;align-items:center;justify-content:center;min-height:380px}
+.figbox{position:relative}
+.figbox svg{width:100%;height:auto;max-height:62vh;overflow:visible}
+.figbox::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 85%,#0a1a3a 0%,#03060d 70%);pointer-events:none}
+.figbox svg{position:relative}
 .info{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
 .chip{align-self:flex-start;font-size:12px;font-weight:800;letter-spacing:.08em;padding:5px 10px;border-radius:20px;background:var(--accent);color:#111}
 .chip.rest{background:var(--rest)} .chip.stretch{background:var(--stretch)} .chip.warm{background:#c9a227}
@@ -634,35 +637,57 @@ const NEAR='#e8ecf1', FAR='#6f7a89', ACC='#ff7a1a', PROP='#3a424e';
 const ln=(a,b,w,c)=>`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
 const dbRect=(p,w,h)=>`<rect x="${(p[0]-w/2).toFixed(1)}" y="${(p[1]-h/2).toFixed(1)}" width="${w}" height="${h}" rx="3" fill="${ACC}"/>`;
 
-function drawSVG(ex,time){
-  const p=placed(ex,time), props=ex.props||[];
-  let s='';
-  // props
-  if(props.includes('seat')) s+=`<rect x="${(p.hip[0]-26).toFixed(1)}" y="${(p.hip[1]+8).toFixed(1)}" width="42" height="${(GROUND-p.hip[1]-8).toFixed(1)}" rx="3" fill="${PROP}"/>`;
-  if(props.includes('box')){ const top=Math.max(p.ankle2[1],p.toe2[1])+5; s+=`<rect x="${(p.ankle2[0]-26).toFixed(1)}" y="${top.toFixed(1)}" width="46" height="${(GROUND-top).toFixed(1)}" rx="3" fill="${PROP}"/>`; }
-  if(props.includes('desk')){ const top=Math.max(p.hand[1],p.hand2[1])+4, x=p.hand[0]-14;
-    s+=`<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="90" height="7" rx="2" fill="${PROP}"/>`+
-       `<rect x="${(x+70).toFixed(1)}" y="${top.toFixed(1)}" width="7" height="${(GROUND-top).toFixed(1)}" fill="${PROP}"/>`+
-       `<rect x="${(x+4).toFixed(1)}" y="${top.toFixed(1)}" width="7" height="${(GROUND-top).toFixed(1)}" fill="${PROP}"/>`; }
-  if(props.includes('wall')){ const x=Math.max(p.hand[0],p.hand2[0])+6; s+=`<rect x="${x.toFixed(1)}" y="14" width="10" height="${GROUND-14}" fill="${PROP}"/>`; }
-  if(props.includes('post')){ const x=Math.min(p.elbow[0],p.elbow2[0])-14; s+=`<rect x="${x.toFixed(1)}" y="14" width="8" height="${GROUND-14}" fill="${PROP}"/>`; }
-  if(props.includes('bar')) s+=`<line x1="110" y1="${BAR_Y}" x2="290" y2="${BAR_Y}" stroke="${PROP}" stroke-width="6" stroke-linecap="round"/>`+
-       `<rect x="104" y="${BAR_Y-14}" width="8" height="20" fill="${PROP}"/><rect x="288" y="${BAR_Y-14}" width="8" height="20" fill="${PROP}"/>`;
-  s+=`<line x1="14" y1="${GROUND+5}" x2="386" y2="${GROUND+5}" stroke="#2a313b" stroke-width="3"/>`;
-  // far side
-  s+=ln(p.hip,p.knee2,13,FAR)+ln(p.knee2,p.ankle2,11,FAR)+ln(p.ankle2,p.toe2,8,FAR);
-  s+=ln(p.sho,p.elbow2,10,FAR)+ln(p.elbow2,p.wrist2,9,FAR)+ln(p.wrist2,p.hand2,7,FAR);
-  if(ex.db==='both') s+=dbRect(p.hand2,13,15);
-  // torso (curved for spine bend)
+/* ---- neon figure ---- */
+const NEON_LITE = typeof window!=='undefined' && window.innerWidth<700; // lighter effects on phones
+const NEON_DEFS = (T,B)=>`<defs>
+<linearGradient id="gN" gradientUnits="userSpaceOnUse" x1="0" y1="${T}" x2="0" y2="${B}"><stop offset="0" stop-color="#7fe0ff"/><stop offset=".45" stop-color="#2f8cff"/><stop offset="1" stop-color="#1446c8"/></linearGradient>
+<linearGradient id="gF" gradientUnits="userSpaceOnUse" x1="0" y1="${T}" x2="0" y2="${B}"><stop offset="0" stop-color="#2a6fd6"/><stop offset="1" stop-color="#0d2a78"/></linearGradient>
+<radialGradient id="gBg" cx=".5" cy=".85" r=".8"><stop offset="0" stop-color="#0a1a3a"/><stop offset="1" stop-color="#03060d"/></radialGradient>
+<linearGradient id="gFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<mask id="mFloor"><rect x="0" y="${GROUND+5}" width="400" height="60" fill="url(#gFloor)"/></mask>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${NEON_LITE?2.5:3.5}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="rim"><feMorphology operator="dilate" radius="0.9" in="SourceAlpha" result="d"/><feComposite in="d" in2="SourceAlpha" operator="out" result="edge"/><feFlood flood-color="#c8f4ff"/><feComposite in2="edge" operator="in" result="e2"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="e2"/></feMerge></filter>
+</defs>`;
+const PROPF='#0f2550', PROPS='#3d7bd9', DBC='#ff9a3d';
+function cap(a,b,r1,r2,fill){
+  const dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
+  const pts=[[a[0]+nx*r1,a[1]+ny*r1],[b[0]+nx*r2,b[1]+ny*r2],[b[0]-nx*r2,b[1]-ny*r2],[a[0]-nx*r1,a[1]-ny*r1]].map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+  return `<polygon points="${pts}" fill="${fill}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r1}" fill="${fill}"/><circle cx="${b[0].toFixed(1)}" cy="${b[1].toFixed(1)}" r="${r2}" fill="${fill}"/>`;
+}
+function hl(a,b,r1,r2){ return cap([a[0],a[1]-r1*.45],[b[0],b[1]-r2*.45],r1*.32,r2*.32,'#d6f6ff'); }
+function limb(segs,fill){ return `<g filter="url(#rim)">${segs.map(q=>cap(q[0],q[1],q[2],q[3],fill)).join('')}<g opacity=".28">${segs.map(q=>hl(...q)).join('')}</g></g>`; }
+const dbN=(p,w,h)=>`<rect x="${(p[0]-w/2).toFixed(1)}" y="${(p[1]-h/2).toFixed(1)}" width="${w}" height="${h}" rx="3" fill="${DBC}" stroke="#ffd2a8" stroke-width="1"/>`;
+function figureSVG(p,ex,time){
   const d=dir(lerpT(ex,time)), perp=[d[1],-d[0]], bend=lerpBend(ex,time);
   const mid=[(p.hip[0]+p.neck[0])/2+perp[0]*bend*2,(p.hip[1]+p.neck[1])/2+perp[1]*bend*2];
-  s+=`<path d="M${p.hip[0].toFixed(1)} ${p.hip[1].toFixed(1)} Q${mid[0].toFixed(1)} ${mid[1].toFixed(1)} ${p.neck[0].toFixed(1)} ${p.neck[1].toFixed(1)}" stroke="${NEAR}" stroke-width="17" stroke-linecap="round" fill="none"/>`;
-  s+=`<circle cx="${p.head[0].toFixed(1)}" cy="${p.head[1].toFixed(1)}" r="${LEN.headR}" fill="${NEAR}"/>`;
-  // near side
-  s+=ln(p.hip,p.knee,13,NEAR)+ln(p.knee,p.ankle,11,NEAR)+ln(p.ankle,p.toe,8,NEAR);
-  s+=ln(p.sho,p.elbow,10,NEAR)+ln(p.elbow,p.wrist,9,NEAR)+ln(p.wrist,p.hand,7,NEAR);
-  if(ex.db==='both'||ex.db==='near') s+=dbRect(p.hand,13,15);
-  if(ex.db==='goblet') s+=dbRect([(p.hand[0]+p.hand2[0])/2,(p.hand[1]+p.hand2[1])/2],14,24);
+  const nk=[p.neck[0]+(p.head[0]-p.neck[0])*.4,p.neck[1]+(p.head[1]-p.neck[1])*.4];
+  let s=`<g opacity=".85">`+limb([[p.hip,p.knee2,9,6.5],[p.knee2,p.ankle2,6.5,4],[p.ankle2,p.toe2,4,3.5]],'url(#gF)')
+    +limb([[p.sho,p.elbow2,6.5,5],[p.elbow2,p.wrist2,5,3.5],[p.wrist2,p.hand2,3.5,3]],'url(#gF)')+`</g>`;
+  if(ex.db==='both') s+=dbN(p.hand2,13,15);
+  s+=`<g filter="url(#rim)">${cap(p.hip,mid,10,12.5,'url(#gN)')}${cap(mid,p.neck,12.5,7,'url(#gN)')}${cap(p.neck,nk,4.5,4.5,'url(#gN)')}<ellipse cx="${p.head[0].toFixed(1)}" cy="${p.head[1].toFixed(1)}" rx="7.5" ry="8.5" fill="url(#gN)"/><g opacity=".25">${hl(p.hip,mid,10,12.5)}${hl(mid,p.neck,12.5,7)}</g></g>`;
+  s+=limb([[p.hip,p.knee,10,7],[p.knee,p.ankle,7,4.5],[p.ankle,p.toe,4.5,4]],'url(#gN)');
+  s+=limb([[p.sho,p.elbow,7,5.5],[p.elbow,p.wrist,5.5,3.8],[p.wrist,p.hand,3.8,3.2]],'url(#gN)');
+  if(ex.db==='both'||ex.db==='near') s+=dbN(p.hand,13,15);
+  if(ex.db==='goblet') s+=dbN([(p.hand[0]+p.hand2[0])/2,(p.hand[1]+p.hand2[1])/2],14,24);
+  return s;
+}
+function drawSVG(ex,time){
+  const p=placed(ex,time), props=ex.props||[];
+  const ys=Object.values(p).map(q=>q[1]), T=Math.min(...ys)-12, B=Math.max(...ys)+6;
+  const R=(x,y,w,h,rx=3)=>`<rect x="${(+x).toFixed(1)}" y="${(+y).toFixed(1)}" width="${(+w).toFixed(1)}" height="${(+h).toFixed(1)}" rx="${rx}" fill="${PROPF}" stroke="${PROPS}" stroke-width="1"/>`;
+  let pr='';
+  if(props.includes('seat')) pr+=R(p.hip[0]-26,p.hip[1]+8,42,GROUND-p.hip[1]-8);
+  if(props.includes('box')){ const top=Math.max(p.ankle2[1],p.toe2[1])+5; pr+=R(p.ankle2[0]-26,top,46,GROUND-top); }
+  if(props.includes('desk')){ const top=Math.max(p.hand[1],p.hand2[1])+4, x=p.hand[0]-14; pr+=R(x+70,top,7,GROUND-top,1)+R(x+4,top,7,GROUND-top,1)+R(x,top,90,7,2); }
+  if(props.includes('wall')){ const x=Math.max(p.hand[0],p.hand2[0])+6; pr+=R(x,14,10,GROUND-14,1); }
+  if(props.includes('post')){ const x=Math.min(p.elbow[0],p.elbow2[0])-14; pr+=R(x,14,8,GROUND-14,1); }
+  if(props.includes('bar')) pr+=R(104,BAR_Y-14,8,20,1)+R(288,BAR_Y-14,8,20,1)+`<line x1="110" y1="${BAR_Y}" x2="290" y2="${BAR_Y}" stroke="#9fd8ff" stroke-width="5" stroke-linecap="round"/>`;
+  const fig=figureSVG(p,ex,time);
+  let s=NEON_DEFS(T,B)+`<rect x="-200" y="-200" width="800" height="700" fill="url(#gBg)"/>`;
+  s+=`<line x1="0" y1="${GROUND+5}" x2="400" y2="${GROUND+5}" stroke="#1d4ea8" stroke-opacity=".6" stroke-width="1"/>`;
+  s+=pr;
+  if(!NEON_LITE) s+=`<g mask="url(#mFloor)" opacity=".6"><g transform="translate(0 ${2*(GROUND+5)}) scale(1 -1)">${fig}</g></g>`;
+  s+=`<g filter="url(#glow)">${fig}</g>`;
   return s;
 }
 function wAt(ex,time){const per=ex.anim.period||3;return (1-Math.cos(2*Math.PI*((time%per)/per)))/2;}
