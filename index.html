@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trail Strength</title>
+<title>Feel Good Habit Tracker</title>
+<meta name="apple-mobile-web-app-title" content="Feel Good">
+<meta name="application-name" content="Feel Good">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1216'/%3E%3Cpath d='M6 50 L24 22 L33 35 L41 26 L58 50 Z' fill='%23ff7a1a'/%3E%3Cpath d='M24 22 L29 30 L26 33 L22 29 Z M41 26 L45 32 L41 34 L38 30 Z' fill='%23e8ecf1'/%3E%3Crect x='14' y='9' width='36' height='4' rx='2' fill='%23e8ecf1'/%3E%3Crect x='10' y='5' width='6' height='12' rx='2' fill='%23e8ecf1'/%3E%3Crect x='48' y='5' width='6' height='12' rx='2' fill='%23e8ecf1'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -223,7 +225,7 @@ table.t td .kg{display:block;font-size:12px}
 
 <!-- DAILY -->
 <div id="daily" class="wrap hidden">
-  <div class="hdr"><h1>Trail Strength</h1>
+  <div class="hdr"><h1>Feel Good Habit Tracker</h1>
     <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <div class="row" style="justify-content:space-between;margin:4px 0 16px">
     <p class="sub" style="margin:0" id="dSub"></p>
@@ -236,7 +238,7 @@ table.t td .kg{display:block;font-size:12px}
 
 <!-- HOME -->
 <div id="home" class="wrap">
-  <div class="hdr"><h1>Trail Strength</h1>
+  <div class="hdr"><h1>Feel Good Habit Tracker</h1>
     <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">15–20 minute home sessions for arm pump, leg pump and a stronger lower back. Rotate A → B → C, three times a week.</p>
 
@@ -262,7 +264,7 @@ table.t td .kg{display:block;font-size:12px}
 
 <!-- WEIGHT -->
 <div id="weight" class="wrap hidden">
-  <div class="hdr"><h1>Trail Strength</h1>
+  <div class="hdr"><h1>Feel Good Habit Tracker</h1>
     <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">Target 12 st 7 lb · 79.4 kg. Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
 
@@ -324,7 +326,7 @@ table.t td .kg{display:block;font-size:12px}
 
 <!-- LIFTS -->
 <div id="lifts" class="wrap hidden">
-  <div class="hdr"><h1>Trail Strength</h1>
+  <div class="hdr"><h1>Feel Good Habit Tracker</h1>
     <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">Logged after each session: dumbbell weight per hand, reps in your best round, or seconds held. Rate each Easy / Right / Hard — for dumbbell work, Easy steps up one click on the dial and two Hards in a row step down one. Bodyweight work progresses by reps and time.</p>
   <div id="liftCards"></div>
@@ -1192,7 +1194,7 @@ if (typeof document !== 'undefined') {
   });
   $('expBtn').addEventListener('click',()=>{
     const {sync:_s,...exp}=store; const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`trail-strength-backup-${todayStr()}.json`;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`feel-good-backup-${todayStr()}.json`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   });
   $('impFile').addEventListener('change',async e=>{
@@ -1202,7 +1204,7 @@ if (typeof document !== 'undefined') {
       if(!Array.isArray(data.weights)||!data.weights.every(x=>typeof x.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)&&typeof x.lb==='number')) throw new Error('bad');
       if(!confirm(`Replace current data with this backup (${data.weights.length} readings)?`)) return;
       const {sync:_s,...imp}=data; store={...store,...imp}; save(); renderWeight();
-    }catch(err){ alert('That file isn’t a valid Trail Strength backup.'); }
+    }catch(err){ alert('That file isn’t a valid Feel Good backup.'); }
     e.target.value='';
   });
 
