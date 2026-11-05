@@ -137,6 +137,14 @@ table.t td .kg{display:block;font-size:12px}
 .strip i.half{background:#6b4a2c}.strip i.full{background:var(--accent)}.strip i.chk{background:var(--rest)}
 .strip i.today{box-shadow:inset 0 0 0 2px var(--text)}
 .dcard .muted ul{margin:4px 0 0;padding-left:18px}
+.daypick{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
+.daypick button[data-step]{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;width:36px;height:34px;font-size:18px}
+.daypick button[disabled]{opacity:.35;cursor:default}
+.daypick #dayLbl{min-width:118px;text-align:center;font-weight:700}
+.editbar{background:#3a2c10;border:1px solid #c9a227;color:#f0d98a;border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.editbar button{background:#c9a227;color:#111;border:0;border-radius:8px;padding:7px 12px;font-weight:700}
+.count{cursor:text}.count input{font:inherit;font-size:inherit;width:3.2em;background:var(--panel2);border:1px solid var(--accent);color:var(--text);border-radius:10px;padding:0 8px}
+.strip i{cursor:pointer}
 .banner{border-radius:14px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--line);background:var(--panel);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .banner.done{border-color:var(--rest)}
 .banner .items span{margin-right:14px;color:var(--muted)}.banner .items span.y{color:var(--rest);font-weight:700}
@@ -164,11 +172,12 @@ table.t td .kg{display:block;font-size:12px}
 .pop{animation:pop .45s ease-out}
 .cal .c.off{background:var(--panel2);color:#4a525e;cursor:default}
 .cal .c.today{box-shadow:inset 0 0 0 2px var(--text)}
+.cal .c.sel{box-shadow:inset 0 0 0 3px #e6c04a}
 .cal .ms{font-size:13px;color:var(--muted);margin-top:8px}
 .afhist{margin-top:12px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
 .afhist .hr{display:grid;grid-template-columns:56px 1fr 56px;gap:10px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
 .afhist .hr b{color:var(--text);text-align:right}
-.afhist .hb{height:10px;background:#e05555;border-radius:5px;overflow:hidden}.afhist .hb i{display:block;height:100%;background:var(--rest)}
+.afhist .hb{height:10px;background:#3a424e;border-radius:5px;overflow:hidden;display:flex}.afhist .hb i{display:block;height:100%;background:var(--rest)}.afhist .hb i.r{background:#e05555}
 .cal{width:100%;max-width:520px;justify-self:center}
 .af .afh{grid-column:1/-1}
 .afh .afhist{max-height:none;margin-top:0}
@@ -229,8 +238,9 @@ table.t td .kg{display:block;font-size:12px}
     <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <div class="row" style="justify-content:space-between;margin:4px 0 16px">
     <p class="sub" style="margin:0" id="dSub"></p>
-    <div class="seg" id="daySeg"><button data-day="0">Today</button><button data-day="-1">Yesterday</button></div>
+    <div class="daypick" id="daySeg"><button data-step="-1" title="Previous day">‹</button><span id="dayLbl"></span><button data-step="1" title="Next day">›</button><button class="linkbtn" data-today>Today</button></div>
   </div>
+  <div id="editBar"></div>
   <div id="afCard"></div>
   <div id="dBanner"></div>
   <div class="dgrid" id="dCards"></div>
@@ -545,6 +555,10 @@ const EX = {
     why:'Gently stretches and calms the lower back.',
     anim:{a:M(STAND,{t:70,hd:-15,ua:77,fa:80,ha:90,th:45,sh:-90,ft:-90}), b:M(STAND,{t:74,hd:-15,ua:79,fa:82,ha:90,th:50,sh:-90,ft:-90}), period:5},
     pin:{pt:'knee',x:230}},
+  wgs:{name:"World's Greatest Stretch", cues:['Long lunge, back knee off the floor, both hands down inside the front foot','Drop the inside elbow toward the front instep','Rotate: sweep that arm up to the ceiling, eyes follow — then back down. Repeat smoothly'],
+    why:'Hips, hamstrings, groin and upper back in one move — your whole riding position, opened up.',
+    anim:{a:{...STAND, t:118, th:82, sh:-6, ft:90, th2:-48, sh2:-50, ft2:20, ua:6, fa:8, ha:10, ua2:2, fa2:2, ha2:5},
+          b:{...STAND, t:112, th:82, sh:-6, ft:90, th2:-48, sh2:-50, ft2:20, ua:178, fa:180, ha:180, ua2:2, fa2:2, ha2:5}, period:5}, pin:{pt:'ankle',x:240}},
   figure4:{name:'Figure-4 glute stretch', cues:['On your back, cross one ankle over the opposite knee','Pull the lower thigh toward your chest','Head and shoulders relaxed on the floor'],
     why:'Releases tight glutes that refer pain into the lower back.',
     anim:{a:{...M(SUP,{ua:160,fa:110}), th:120, sh:50, ft:90, th2:160, sh2:100, ft2:100},
@@ -606,8 +620,9 @@ const SESSIONS = {
 };
 
 SESSIONS.M = {name:'Morning stretch', tag:'Daily', rounds:0, daily:true, warm:[], work:[],
-  stretch:[{ex:'catCow',d:40},{ex:'hipFlexor',d:30,side:'Left knee down'},{ex:'hipFlexor',d:30,side:'Right knee down'},
-    {ex:'hamstring',d:25,side:'Left leg'},{ex:'hamstring',d:25,side:'Right leg'},{ex:'childPose',d:45}]};
+  stretch:[{ex:'catCow',d:60},{ex:'hipFlexor',d:60,side:'Left knee down'},{ex:'hipFlexor',d:60,side:'Right knee down'},
+    {ex:'hamstring',d:60,side:'Left leg'},{ex:'hamstring',d:60,side:'Right leg'},{ex:'childPose',d:60},
+    {ex:'wgs',d:60,side:'Left leg forward'},{ex:'wgs',d:60,side:'Right leg forward'}]};
 
 const QUOTES = [
   'Quiet upper body, busy legs. That starts here.',
@@ -926,7 +941,7 @@ if (typeof document !== 'undefined') {
   function renderAF(celebrate){
     const today=todayStr(), d=addDays(today,dayOff), A=store.af, s=afStats(A,today);
     if(!calYM) calYM=today.slice(0,7);
-    const st=afState(A,d), label=dayOff?'yesterday':'today';
+    const st=afState(A,d), label=dayOff===0?'today':dayOff===-1?'yesterday':'on '+niceDate(d,false);
     const prevM=s.next?Math.max(0,...AF_MILESTONES.filter(m=>m<=s.cur)):0;
     const pct=s.next?100*(s.cur-prevM)/(s.next-prevM):100;
     const [y,m]=calYM.split('-').map(Number), first=new Date(Date.UTC(y,m-1,1)), nDays=new Date(Date.UTC(y,m,0)).getUTCDate();
@@ -934,7 +949,7 @@ if (typeof document !== 'undefined') {
     let cells=['M','T','W','T','F','S','S'].map(x=>`<div class="dow">${x}</div>`).join('')+'<div></div>'.repeat(lead);
     for(let i=1;i<=nDays;i++){ const dd=`${calYM}-${String(i).padStart(2,'0')}`, off=dd<A.start||dd>today, ss=off?'':afState(A,dd);
       const cls=off?'off':ss==='af'?'':ss==='dr'?'dr':'un';
-      cells+=`<button class="c ${cls} ${dd===today?'today':''}" ${off?'disabled':''} data-cal="${dd}" title="${niceDate(dd)}${off?'':ss==='af'?': alcohol-free':ss==='dr'?': drink day':': not logged'}">${i}</button>`; }
+      cells+=`<button class="c ${cls} ${dd===today?'today':''} ${dd===d&&dayOff?'sel':''}" ${off?'disabled':''} data-cal="${dd}" title="${niceDate(dd)}${off?'':ss==='af'?': alcohol-free':ss==='dr'?': drink day':': not logged'}">${i}</button>`; }
     const ms=monthAF(A,today,calYM);
     const monthName=first.toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'});
     const hit=celebrate&&AF_MILESTONES.includes(s.cur);
@@ -971,7 +986,7 @@ if (typeof document !== 'undefined') {
     if(!rows.length) return '';
     return '<div class="afhist">'+rows.reverse().map(([ym,r])=>{
       const lab=new Date(dms(ym+'-01')).toLocaleDateString('en-GB',{month:'short',year:'2-digit',timeZone:'UTC'}), pc=100*r.af/r.tracked;
-      return `<div class="hr" data-ym="${ym}"><span>${lab}</span><div class="hb"><i style="width:${pc}%"></i></div><b>${r.af}/${r.tracked}</b></div>`;
+      return `<div class="hr" data-ym="${ym}"><span>${lab}</span><div class="hb"><i style="width:${pc}%"></i><i class="r" style="width:${100*r.dr/r.tracked}%"></i></div><b>${r.af}/${r.tracked}</b></div>`;
     }).join('')+'</div>';
   }
   function setAF(dd,state){
@@ -1001,8 +1016,11 @@ if (typeof document !== 'undefined') {
   function renderDaily(){
     renderAF();
     const today=todayStr(), d=addDays(today,dayOff), rec=store.daily[d]||{};
-    document.querySelectorAll('#daySeg button').forEach(b=>b.classList.toggle('on',+b.dataset.day===dayOff));
-    $('dSub').textContent=(dayOff?'Logging for yesterday, ':'')+niceDate(d)+' · 10 minutes every morning.';
+    $('dayLbl').textContent=dayOff===0?'Today':dayOff===-1?'Yesterday':new Date(dms(d)).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
+    document.querySelector('#daySeg [data-step="1"]').disabled=dayOff>=0;
+    document.querySelector('#daySeg [data-today]').style.visibility=dayOff?'visible':'hidden';
+    $('dSub').textContent=niceDate(today)+' · 10 minutes every morning.';
+    $('editBar').innerHTML=dayOff?`<div class="editbar"><span>✎ Editing <b>${new Date(dms(d)).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}</b> — changes go on this day</span><button data-today>Back to today</button></div>`:'';
     const ms=morningStreak(store.daily,store.goals,today), md=morningDone(store.daily,store.goals,d);
     $('dBanner').innerHTML=`<div class="banner ${md?'done':''}"><div><b style="font-size:18px">${md?'Morning done ✓':'Morning 10'}</b>
       <div class="muted">Morning streak: <b style="color:var(--text)">${ms} day${ms===1?'':'s'}</b> · best ${bestMorning()}</div></div>
@@ -1013,15 +1031,15 @@ if (typeof document !== 'undefined') {
       let strip='';
       for(let i=29;i>=0;i--){ const dd=addDays(today,-i), r=(store.daily[dd]||{})[it.k];
         let c=''; if(it.kind==='tick') c=r?'chk':''; else c=dayMet(store.daily,store.goals,it.k,dd)?'full':(r>0?'half':'');
-        strip+=`<i class="${c}${dd===d?' today':''}" title="${niceDate(dd)}${it.kind==='count'?': '+(r||0):r?': done':''}"></i>`; }
+        strip+=`<i class="${c}${dd===d?' today':''}" data-jump="${-i}" title="${niceDate(dd)}${it.kind==='count'?': '+(r||0):r?': done':''} — tap to edit"></i>`; }
       const streaks=`<div class="streaks"><div><b>${cur}</b>day streak</div><div><b>${best}</b>best</div>${it.kind==='count'?`<div><b>${Math.max(0,...Object.values(store.daily).map(x=>x[it.k]||0))}</b>best day</div>`:''}</div>`;
       if(it.kind==='count') return `<div class="dcard ${met?'met':''}" data-k="${it.k}">
         <h3>${it.name}<span class="goal">Daily goal <input type="number" min="1" max="500" value="${store.goals[it.k]||1}" data-goal="${it.k}"></span></h3>
-        <div class="count">${v||0}<small>${met?'✓ goal hit':'today'}</small></div>
+        <div class="count" data-edit="${it.k}" title="Tap to type a number">${v||0}<small>${met?'✓ goal hit':(dayOff?'':'today')}</small></div>
         <div class="btns"><button data-add="-1">−1</button><button class="plus" data-add="1">+1</button><button class="plus" data-add="5">+5</button><button class="plus" data-add="10">+10</button></div>
         <div class="muted">${it.cue}</div>${streaks}<div class="strip">${strip}</div></div>`;
       const extra = it.k==='st'
-        ? `<div class="muted">Guided, about 3½ min: cat-cow, hip flexors, hamstrings, child's pose. Finishing it ticks this off.</div><button class="btn ghost" id="stretchGo">▶ Start guided stretch</button>`
+        ? `<div class="muted">Guided, 8 min — 1 min per position, flow through reps: cat-cow, hip flexors, hamstrings, child's pose, World's Greatest Stretch. Finishing it ticks this off.</div><button class="btn ghost" id="stretchGo">▶ Start guided stretch</button>`
         : `<div class="muted">${it.cue}</div>`;
       return `<div class="dcard ${met?'met':''}" data-k="${it.k}"><h3>${it.name}</h3>
         <button class="tick ${v?'on':''}" data-tick="${it.k}">${v?'✓ Done':'Tap when done'}</button>${extra}${streaks}<div class="strip">${strip}</div></div>`;
@@ -1035,7 +1053,23 @@ if (typeof document !== 'undefined') {
     const d=addDays(todayStr(),dayOff), rec=store.daily[d]||(store.daily[d]={});
     rec[k]=fn(rec[k]); rec._t=Date.now(); (rec._ts ||= {})[k]=rec._t; save(); renderDaily();
   }
-  $('daySeg').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; dayOff=+b.dataset.day; renderDaily();});
+  const MAXBACK=-730;
+  function setDay(o){ dayOff=Math.max(MAXBACK,Math.min(0,o)); renderDaily(); }
+  $('daily').addEventListener('click',e=>{
+    const s=e.target.closest('[data-step]'); if(s&&!s.disabled){ setDay(dayOff+(+s.dataset.step)); return; }
+    if(e.target.closest('[data-today]')){ setDay(0); return; }
+    const j=e.target.closest('[data-jump]'); if(j){ setDay(+j.dataset.jump); return; }
+    const c=e.target.closest('[data-edit]');
+    if(c&&!c.querySelector('input')){
+      const k=c.dataset.edit, d=addDays(todayStr(),dayOff), cur=(store.daily[d]||{})[k]||0;
+      c.innerHTML=`<input type="number" min="0" max="9999" inputmode="numeric" value="${cur}">`;
+      const inp=c.querySelector('input'); inp.focus(); inp.select();
+      let done=false; const commit=ok=>{ if(done) return; done=true; const n=parseInt(inp.value,10);
+        if(ok&&!isNaN(n)&&n>=0) setDaily(k,()=>Math.min(9999,n)); else renderDaily(); };
+      inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') commit(true); else if(ev.key==='Escape') commit(false); });
+      inp.addEventListener('blur',()=>commit(true));
+    }
+  });
   $('dCards').addEventListener('click',e=>{
     const a=e.target.closest('[data-add]'); if(a){ const k=a.closest('.dcard').dataset.k, n=+a.dataset.add; setDaily(k,v=>Math.max(0,(v||0)+n)); return; }
     const t=e.target.closest('[data-tick]'); if(t){ setDaily(t.dataset.tick,v=>!v); return; }
