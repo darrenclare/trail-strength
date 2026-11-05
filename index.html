@@ -107,6 +107,12 @@ table.t td .kg{display:block;font-size:12px}
 .flag.good{border-color:var(--rest)}.flag.good b{color:var(--rest)}
 .ok{color:var(--rest);font-weight:700}.behind{color:#e6c04a;font-weight:700}
 @media (max-width:860px){.two{grid-template-columns:1fr}}
+/* sync */
+.hdrr{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.syncpill{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:7px 12px;font-size:13px}
+.syncpill.ok{color:var(--rest);border-color:#2b6b55}.syncpill.err{color:#e6c04a;border-color:#6b5a2b}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;letter-spacing:.06em;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:inline-block;user-select:all}
+#syncPanel input.ci{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.05em;text-transform:uppercase;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 12px;width:min(100%,360px)}
 /* daily */
 .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
 .dcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
@@ -218,7 +224,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- DAILY -->
 <div id="daily" class="wrap hidden">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <div class="row" style="justify-content:space-between;margin:4px 0 16px">
     <p class="sub" style="margin:0" id="dSub"></p>
     <div class="seg" id="daySeg"><button data-day="0">Today</button><button data-day="-1">Yesterday</button></div>
@@ -231,7 +237,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- HOME -->
 <div id="home" class="wrap">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">15–20 minute home sessions for arm pump, leg pump and a stronger lower back. Rotate A → B → C, three times a week.</p>
 
   <div class="row">
@@ -257,7 +263,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- WEIGHT -->
 <div id="weight" class="wrap hidden">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">Target 12 st 7 lb · 79.4 kg. Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
 
   <div class="stats" id="wStats"></div>
@@ -301,9 +307,14 @@ table.t td .kg{display:block;font-size:12px}
     <table class="t" id="wTable"></table>
   </div>
 
+  <div class="panel" id="syncPanel">
+    <h3>Sync between devices</h3>
+    <div id="syncBody"></div>
+  </div>
+
   <div class="panel">
     <h3>Backup</h3>
-    <p class="muted" style="margin-top:0">Your data is saved in this browser on this computer only. Export a backup every month or so — if browser data is cleared, it's gone.</p>
+    <p class="muted" style="margin-top:0">A file copy of everything, as an extra safety net. Without sync, data lives in this browser only.</p>
     <div class="row">
       <button class="btn ghost" id="expBtn">Export backup</button>
       <label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="impFile" accept="application/json,.json" hidden></label>
@@ -314,7 +325,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- LIFTS -->
 <div id="lifts" class="wrap hidden">
   <div class="hdr"><h1>Trail Strength</h1>
-    <nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">Logged after each session: dumbbell weight per hand, reps in your best round, or seconds held. Rate each Easy / Right / Hard — for dumbbell work, Easy steps up one click on the dial and two Hards in a row step down one. Bodyweight work progresses by reps and time.</p>
   <div id="liftCards"></div>
 </div>
@@ -357,6 +368,7 @@ table.t td .kg{display:block;font-size:12px}
   <p style="margin-top:28px"><button class="btn" id="homeBtn">Back to sessions</button></p>
 </div>
 
+<script src="merge.js"></script>
 <script>
 /* ================= FIGURE RIG ================= */
 const GROUND = 236, BAR_Y = 24;
@@ -898,7 +910,8 @@ if (typeof document !== 'undefined') {
   const KEY='trailStrength.v1';
   let store={mode:0, bar:true, sound:true, voice:true, history:{}};
   try{ const raw=localStorage.getItem(KEY); if(raw) store={...store,...JSON.parse(raw)}; }catch(e){}
-  const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} };
+  const saveLocal=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} };
+  const save=()=>{ saveLocal(); if(typeof scheduleSync==='function') scheduleSync(); };
   if(!Array.isArray(store.weights)){ store.weights=SEED_WEIGHTS.map(x=>({...x})); save(); }
 
   /* ---- tabs ---- */
@@ -963,6 +976,7 @@ if (typeof document !== 'undefined') {
     const A=store.af;
     A.af=A.af.filter(x=>x!==dd); A.drinks=A.drinks.filter(x=>x!==dd);
     if(state==='af') A.af.push(dd); else if(state==='dr') A.drinks.push(dd);
+    (A.t ||= {})[dd]=Date.now();
     A.af.sort(); A.drinks.sort(); save();
   }
   $('afCard').addEventListener('click',e=>{
@@ -977,7 +991,7 @@ if (typeof document !== 'undefined') {
   });
   $('afCard').addEventListener('change',e=>{
     if(e.target.id!=='afStart'||!e.target.value) return;
-    store.af.start=e.target.value; save(); renderAF();
+    store.af.start=e.target.value; store.af.startT=Date.now(); save(); renderAF();
   });
   let dayOff=0;
 
@@ -1017,7 +1031,7 @@ if (typeof document !== 'undefined') {
   }
   function setDaily(k,fn){
     const d=addDays(todayStr(),dayOff), rec=store.daily[d]||(store.daily[d]={});
-    rec[k]=fn(rec[k]); save(); renderDaily();
+    rec[k]=fn(rec[k]); rec._t=Date.now(); (rec._ts ||= {})[k]=rec._t; save(); renderDaily();
   }
   $('daySeg').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; dayOff=+b.dataset.day; renderDaily();});
   $('dCards').addEventListener('click',e=>{
@@ -1027,14 +1041,14 @@ if (typeof document !== 'undefined') {
   });
   $('dCards').addEventListener('change',e=>{
     const g=e.target.closest('[data-goal]'); if(!g) return;
-    const n=parseInt(g.value,10); if(n>=1){ store.goals[g.dataset.goal]=n; save(); renderDaily(); }
+    const n=parseInt(g.value,10); if(n>=1){ store.goals[g.dataset.goal]=n; store.goalsT=Date.now(); save(); renderDaily(); }
   });
   function showTab(tab){
     for(const id of ['daily','home','lifts','weight']) $(id).classList.toggle('hidden',tab!==id);
     $('player').classList.add('hidden');
     $('done').classList.add('hidden');
     document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-    if(tab==='weight') renderWeight(); else if(tab==='lifts') renderLifts(); else if(tab==='daily'){ dayOff=0; renderDaily(); } else renderHome();
+    if(tab==='weight'){ renderWeight(); renderSyncPanel(); } else if(tab==='lifts') renderLifts(); else if(tab==='daily'){ dayOff=0; renderDaily(); } else renderHome();
     P.lastTab=tab;
     window.scrollTo(0,0);
   }
@@ -1105,7 +1119,7 @@ if (typeof document !== 'undefined') {
         const sel=r.querySelector('select'); if(sel) entry.kg=parseFloat(sel.value);
         const n=parseInt(r.querySelector('.cnt input').value,10); if(!isNaN(n)&&n>=0) entry.n=n;
         store.lifts=store.lifts.filter(l=>!(l.ex===ex&&l.d===d));
-        store.lifts.push(entry);
+        entry.t=Date.now(); store.lifts.push(entry);
       });
       save();
       $('liftMsg').textContent='Saved. Next session will show your targets.';
@@ -1163,7 +1177,7 @@ if (typeof document !== 'undefined') {
     if(!d){msg.textContent='Pick a date.';return;}
     if(tot===null||tot<84||tot>420){msg.textContent='Enter your weight in stone and pounds.';return;}
     if(lbIn<0||lbIn>=14){msg.textContent='Pounds must be 0–13.';return;}
-    const entry={d, lb:tot}; if(w>=20&&w<=60) entry.w=w;
+    const entry={d, lb:tot, t:Date.now()}; if(w>=20&&w<=60) entry.w=w;
     const i=store.weights.findIndex(e=>e.d===d);
     if(i>=0) store.weights[i]=entry; else store.weights.push(entry);
     save();
@@ -1174,10 +1188,10 @@ if (typeof document !== 'undefined') {
   $('wTable').addEventListener('click',e=>{
     const b=e.target.closest('[data-del]'); if(!b) return;
     if(!confirm(`Delete the reading for ${niceDate(b.dataset.del)}?`)) return;
-    store.weights=store.weights.filter(x=>x.d!==b.dataset.del); save(); renderWeight();
+    store.weights=store.weights.filter(x=>x.d!==b.dataset.del); (store.weightsDel ||= {})[b.dataset.del]=Date.now(); save(); renderWeight();
   });
   $('expBtn').addEventListener('click',()=>{
-    const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+    const {sync:_s,...exp}=store; const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`trail-strength-backup-${todayStr()}.json`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   });
@@ -1187,7 +1201,7 @@ if (typeof document !== 'undefined') {
       const data=JSON.parse(await f.text());
       if(!Array.isArray(data.weights)||!data.weights.every(x=>typeof x.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)&&typeof x.lb==='number')) throw new Error('bad');
       if(!confirm(`Replace current data with this backup (${data.weights.length} readings)?`)) return;
-      store={...store,...data}; save(); renderWeight();
+      const {sync:_s,...imp}=data; store={...store,...imp}; save(); renderWeight();
     }catch(err){ alert('That file isn’t a valid Trail Strength backup.'); }
     e.target.value='';
   });
@@ -1218,10 +1232,10 @@ if (typeof document !== 'undefined') {
     $('homeQuote').textContent='\u201C'+quote()+'\u201D';
   }
 
-  $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;store.mode=+b.dataset.mode;save();renderHome();});
-  $('barChk').addEventListener('change',e=>{store.bar=e.target.checked;save();renderHome();});
-  $('soundChk').addEventListener('change',e=>{store.sound=e.target.checked;save();});
-  $('voiceChk').addEventListener('change',e=>{store.voice=e.target.checked;save();});
+  $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;store.mode=+b.dataset.mode;store.setT=Date.now();save();renderHome();});
+  $('barChk').addEventListener('change',e=>{store.bar=e.target.checked;store.setT=Date.now();save();renderHome();});
+  $('soundChk').addEventListener('change',e=>{store.sound=e.target.checked;store.setT=Date.now();save();});
+  $('voiceChk').addEventListener('change',e=>{store.voice=e.target.checked;store.setT=Date.now();save();});
   $('cards').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(b)start(b.dataset.start);});
 
   /* audio */
@@ -1293,7 +1307,7 @@ if (typeof document !== 'undefined') {
   function finish(){
     P.running=false;
     if(SESSIONS[P.key].daily){
-      const d=todayStr(); (store.daily[d] ||= {}).st=true; save();
+      const d=todayStr(); const r=(store.daily[d] ||= {}); r.st=true; r._t=Date.now(); (r._ts ||= {}).st=r._t; save();
       beep(660,0.2); setTimeout(()=>beep(990,0.4),220); say('Stretch done.');
       showTab('daily'); return;
     }
@@ -1341,8 +1355,79 @@ if (typeof document !== 'undefined') {
     }
     requestAnimationFrame(loop);
   }
+  /* ---- sync ---- */
+  const SY={busy:false,again:false,timer:null,lastOk:0,err:''};
+  function newCode(){ const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b=new Uint8Array(16); crypto.getRandomValues(b);
+    let s=''; b.forEach((x,i)=>{ s+=A[x%A.length]; if(i%4===3&&i<15) s+='-'; }); return s; }
+  function scheduleSync(){ if(!store.sync||!store.sync.code) return; clearTimeout(SY.timer); SY.timer=setTimeout(syncNow,1500); }
+  function syncPill(){
+    document.querySelectorAll('.syncpill').forEach(p=>{
+      p.classList.toggle('ok',!!(store.sync&&store.sync.code)&&!SY.err&&SY.lastOk>0);
+      p.classList.toggle('err',!!SY.err);
+      const t=p.querySelector('.syncst');
+      if(!store.sync||!store.sync.code) t.textContent='Not synced';
+      else if(SY.busy) t.textContent='Syncing…';
+      else if(SY.err) t.textContent='Offline — will retry';
+      else if(SY.lastOk){ const m=Math.round((Date.now()-SY.lastOk)/60000); t.textContent=m<1?'Synced':'Synced '+m+'m ago'; }
+      else t.textContent='Sync on';
+    });
+  }
+  async function syncNow(){
+    if(!store.sync||!store.sync.code) return;
+    if(SY.busy){ SY.again=true; return; }
+    SY.busy=true; syncPill();
+    try{
+      const {sync,...data}=store;
+      const r=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:sync.code,data})});
+      if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
+      const {data:server}=await r.json();
+      const {sync:s2,...local}=store;           // re-merge with anything tapped while the request was in flight
+      store={...store,...mergeStores(local,server),sync:s2};
+      saveLocal(); SY.lastOk=Date.now(); SY.err='';
+      refreshView();
+    }catch(e){ SY.err=String(e.message||e); }
+    SY.busy=false; syncPill(); renderSyncPanel();
+    if(SY.again){ SY.again=false; scheduleSync(); }
+  }
+  function refreshView(){
+    if(!$('player').classList.contains('hidden')||!$('done').classList.contains('hidden')) return; // don't disturb a workout
+    if(document.activeElement&&['INPUT','SELECT'].includes(document.activeElement.tagName)) return; // or a half-typed entry
+    const vis=['daily','home','lifts','weight'].find(id=>!$(id).classList.contains('hidden'));
+    if(vis==='daily') renderDaily(); else if(vis==='lifts') renderLifts(); else if(vis==='weight') renderWeight(); else if(vis==='home') renderHome();
+  }
+  function renderSyncPanel(){
+    const b=$('syncBody'); if(!b) return;
+    const c=store.sync&&store.sync.code;
+    if(c) b.innerHTML=`<p class="muted" style="margin-top:0">This device is syncing. To add another device, open the app there, come to this panel and enter this code:</p>
+      <div class="row"><span class="code">${c}</span><button class="btn ghost" id="syCopy">Copy</button><button class="btn ghost" id="syNow">Sync now</button></div>
+      <p class="muted">${SY.err?'Last attempt failed ('+SY.err+') — it will retry automatically.':SY.lastOk?'Last synced '+new Date(SY.lastOk).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'.':''}
+      Keep the code private: anyone with it can see this data. <button class="linkbtn" id="syOff">Stop syncing on this device</button></p>`;
+    else b.innerHTML=`<p class="muted" style="margin-top:0">Keeps this app the same on your phone and desktop. Everything on both devices is merged — nothing is lost.</p>
+      <div class="row" style="align-items:flex-start;gap:24px">
+        <div><b>First device</b><p class="muted" style="margin:4px 0 8px">Create a code here.</p><button class="btn" id="syNew">Create sync code</button></div>
+        <div><b>Second device</b><p class="muted" style="margin:4px 0 8px">Enter the code from your first device.</p>
+          <div class="row"><input class="ci" id="syIn" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn" id="syJoin">Connect</button></div>
+          <div class="muted" id="syMsg"></div></div>
+      </div>`;
+  }
+  $('syncBody').addEventListener('click',async e=>{
+    const id=e.target.id;
+    if(id==='syNew'){ store.sync={code:newCode()}; saveLocal(); renderSyncPanel(); syncNow(); }
+    else if(id==='syJoin'){ const v=$('syIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if(v.length!==16){ $('syMsg').textContent='That should be 16 letters and numbers.'; return; }
+      store.sync={code:v.match(/.{4}/g).join('-')}; saveLocal(); renderSyncPanel(); await syncNow(); }
+    else if(id==='syNow') syncNow();
+    else if(id==='syCopy'){ try{ await navigator.clipboard.writeText(store.sync.code); e.target.textContent='Copied ✓'; }catch(_){ } }
+    else if(id==='syOff'){ delete store.sync; saveLocal(); SY.lastOk=0; SY.err=''; renderSyncPanel(); syncPill(); }
+  });
+  document.addEventListener('click',e=>{ if(e.target.closest('[data-syncpill]')){ showTab('weight'); setTimeout(()=>$('syncPanel').scrollIntoView({behavior:'smooth'}),50); } });
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') syncNow(); });
+  setInterval(syncPill,30000);
+  renderSyncPanel(); syncPill();
+
   showTab('daily');
   requestAnimationFrame(loop);
+  syncNow();
 }
 </script>
 </body>
