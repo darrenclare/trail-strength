@@ -46,6 +46,11 @@
     const gSrc = (b.goalsT || 0) > (a.goalsT || 0) ? b : a;
     out.goals = gSrc.goals || a.goals || b.goals;
     out.goalsT = Math.max(a.goalsT || 0, b.goalsT || 0);
+    // personal setup (target, dumbbells, alcohol-free on/off)
+    const pSrc = (b.profileT || 0) > (a.profileT || 0) ? b : a;
+    if (pSrc.profile || a.profile || b.profile) out.profile = pSrc.profile || a.profile || b.profile;
+    out.profileT = Math.max(a.profileT || 0, b.profileT || 0);
+    if (a.setupDone || b.setupDone) out.setupDone = true;
     // session history: highest count and latest date
     out.history = {};
     for (const k of new Set([...Object.keys(a.history || {}), ...Object.keys(b.history || {})])) {

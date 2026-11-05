@@ -115,6 +115,13 @@ table.t td .kg{display:block;font-size:12px}
 .syncpill.ok{color:var(--rest);border-color:#2b6b55}.syncpill.err{color:#e6c04a;border-color:#6b5a2b}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;letter-spacing:.06em;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:inline-block;user-select:all}
 #syncPanel input.ci{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.05em;text-transform:uppercase;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 12px;width:min(100%,360px)}
+/* setup */
+.sf{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.sf label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:600}
+.sf input,.sf select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 12px;font:inherit;font-size:16px;color-scheme:dark}
+.sf .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sf .chkrow{flex-direction:row;align-items:center;gap:8px}
+#syncPanel input.ci,#setup input.ci{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:.05em;text-transform:uppercase;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 12px;width:min(100%,360px)}
 /* daily */
 .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
 .dcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
@@ -232,6 +239,21 @@ table.t td .kg{display:block;font-size:12px}
 </head>
 <body>
 
+<!-- FIRST RUN -->
+<div id="setup" class="wrap hidden">
+  <h1 style="margin-bottom:6px">Welcome to Feel Good Habit Tracker</h1>
+  <p class="sub">A couple of quick details to set it up for you. Everything stays on this device unless you turn on sync.</p>
+  <div class="panel">
+    <h3>Already use it on another device?</h3>
+    <p class="muted" style="margin-top:0">Enter your sync code and everything comes across — skip the rest.</p>
+    <div class="row"><input class="ci" id="suCode" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn" id="suJoin">Connect</button></div>
+    <div class="muted" id="suJoinMsg"></div>
+  </div>
+  <div class="panel"><h3>New here</h3><div id="suForm"></div>
+    <div class="row" style="margin-top:16px"><button class="btn" id="suGo">Start</button><span class="muted" id="suMsg"></span></div>
+  </div>
+</div>
+
 <!-- DAILY -->
 <div id="daily" class="wrap hidden">
   <div class="hdr"><h1>Feel Good Habit Tracker</h1>
@@ -276,7 +298,7 @@ table.t td .kg{display:block;font-size:12px}
 <div id="weight" class="wrap hidden">
   <div class="hdr"><h1>Feel Good Habit Tracker</h1>
     <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
-  <p class="sub">Target 12 st 7 lb · 79.4 kg. Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
+  <p class="sub"><span id="wTargetTxt"></span>Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
 
   <div class="stats" id="wStats"></div>
   <div id="wFlags"></div>
@@ -317,6 +339,11 @@ table.t td .kg{display:block;font-size:12px}
   <div class="panel">
     <h3>All readings</h3>
     <table class="t" id="wTable"></table>
+  </div>
+
+  <div class="panel" id="setupPanel">
+    <h3>Your setup</h3>
+    <div id="setupBody"></div>
   </div>
 
   <div class="panel" id="syncPanel">
@@ -724,8 +751,8 @@ function lerpT(ex,time){const w=wAt(ex,time);return ex.anim.a.t+(ex.anim.b.t-ex.
 function lerpBend(ex,time){const w=wAt(ex,time);return ex.anim.a.bend+(ex.anim.b.bend-ex.anim.a.bend)*w;}
 
 /* ================= WEIGHT (pure functions) ================= */
-const TARGET_LB = 175; // 12 st 7 lb
-const SEED_WEIGHTS = [{d:'2026-07-01', lb:196}, {d:'2026-10-19', lb:187}];
+// Original owner's plan — used only when a store has no profile (set up before first-run setup existed)
+const LEGACY_TARGET = 175; // 12 st 7 lb
 const MILESTONES = [
   {d:'2026-11-15', lb:184.5, label:'Mid-Nov'},
   {d:'2026-12-15', lb:182,   label:'Mid-Dec'},
@@ -784,8 +811,9 @@ function chartSVG(ws){
   const s=sortW(ws); if(!s.length) return '';
   const mo=monthly(ws);
   const W=900,H=340,L=104,R=24,T=20,B=40;
-  const t0=dms(s[0].d)-10*DAY, t1=Math.max(dms(MILESTONES[MILESTONES.length-1].d), dms(s[s.length-1].d))+10*DAY;
-  const vals=[...s.map(e=>e.lb), TARGET_LB, ...MILESTONES.map(m=>m.lb)];
+  const MS=CFG.milestones||[], TG=CFG.target;
+  const t0=dms(s[0].d)-10*DAY, t1=Math.max(MS.length?dms(MS[MS.length-1].d):0, dms(s[s.length-1].d)+60*DAY)+10*DAY;
+  const vals=[...s.map(e=>e.lb), ...(TG?[TG]:[]), ...MS.map(m=>m.lb)];
   const lo=Math.floor((Math.min(...vals)-1)/7)*7, hi=Math.ceil((Math.max(...vals)+1)/7)*7;
   const X=t=>L+(t-t0)/(t1-t0)*(W-L-R), Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
   let o=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block" role="img" aria-label="Weight progress chart">`;
@@ -802,12 +830,12 @@ function chartSVG(ws){
     o+=`<text x="${x}" y="${H-B+20}" text-anchor="middle" font-size="12" fill="var(--muted)">${lab}</text>`;
     m=new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth()+1, 1));
   }
-  o+=`<line x1="${L}" x2="${W-R}" y1="${Y(TARGET_LB)}" y2="${Y(TARGET_LB)}" stroke="var(--rest)" stroke-width="2"/>`;
-  o+=`<text x="${L+8}" y="${Y(TARGET_LB)-6}" text-anchor="start" font-size="12" fill="var(--rest)">Target 12 st 7 lb · 79.4 kg</text>`;
+  if(TG){ o+=`<line x1="${L}" x2="${W-R}" y1="${Y(TG)}" y2="${Y(TG)}" stroke="var(--rest)" stroke-width="2"/>`;
+  o+=`<text x="${L+8}" y="${Y(TG)-6}" text-anchor="start" font-size="12" fill="var(--rest)">Target ${stlb(TG)} · ${kgTxt(TG)}</text>`; }
   const last=mo[mo.length-1];
-  const plan=[[X(last.t),Y(last.lb)], ...MILESTONES.filter(q=>dms(q.d)>last.t).map(q=>[X(dms(q.d)),Y(q.lb)])];
+  const plan=[[X(last.t),Y(last.lb)], ...MS.filter(q=>dms(q.d)>last.t).map(q=>[X(dms(q.d)),Y(q.lb)])];
   if(plan.length>1) o+=`<polyline points="${plan.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 5"/>`;
-  for(const q of MILESTONES) if(dms(q.d)>last.t) o+=`<circle cx="${X(dms(q.d))}" cy="${Y(q.lb)}" r="4" fill="var(--bg)" stroke="var(--muted)" stroke-width="2"/>`;
+  for(const q of MS) if(dms(q.d)>last.t) o+=`<circle cx="${X(dms(q.d))}" cy="${Y(q.lb)}" r="4" fill="var(--bg)" stroke="var(--muted)" stroke-width="2"/>`;
   for(const e of s) o+=`<circle cx="${X(dms(e.d))}" cy="${Y(e.lb)}" r="3" fill="var(--muted)" opacity=".7"/>`;
   if(mo.length>1) o+=`<polyline points="${mo.map(q=>X(q.t)+','+Y(q.lb)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
   for(const q of mo) o+=`<circle cx="${X(q.t)}" cy="${Y(q.lb)}" r="6.5" fill="${q.n>=5?'var(--accent)':'var(--bg)'}" stroke="var(--accent)" stroke-width="2.5"><title>${q.k}: ${stlb(q.lb)} (${kgTxt(q.lb)}) from ${q.n} reading${q.n>1?'s':''}</title></circle>`;
@@ -816,7 +844,28 @@ function chartSVG(ws){
 
 /* ================= LIFTS (pure functions) ================= */
 // Dial settings on Darren's 2–24 kg adjustable dumbbells (0 = bodyweight)
-const DIAL = [2,3,4,5,6,7,8,9,10,11.5,13.5,16,18,20.5,22.5,24];
+const DIALS = {
+  dial24:{label:'Adjustable 2–24 kg (dial)', v:[2,3,4,5,6,7,8,9,10,11.5,13.5,16,18,20.5,22.5,24]},
+  step25:{label:'Plates, 2.5 kg steps (2.5–40 kg)', v:Array.from({length:16},(_,i)=>2.5*(i+1))},
+  step1:{label:'Fixed / other, 1 kg steps (1–40 kg)', v:Array.from({length:40},(_,i)=>i+1)},
+  step2lb:{label:'Pounds, 5 lb steps (5–90 lb)', v:Array.from({length:18},(_,i)=>+(5*(i+1)*0.45359237).toFixed(2))},
+};
+const DIAL = DIALS.dial24.v;
+// Active configuration for whoever is using this browser (set by applyProfile)
+let CFG = {target:LEGACY_TARGET, milestones:null, dial:DIAL, waist:35, afOn:true};
+function genMilestones(fromLb, targetLb, fromDate){
+  const out=[]; if(!(fromLb>targetLb)) return out;
+  let [y,m]=fromDate.split('-').map(Number);
+  for(let i=0;i<24;i++){
+    m++; if(m>12){m=1;y++;}
+    const d=`${y}-${String(m).padStart(2,'0')}-15`, wks=(dms(d)-dms(fromDate))/WEEK;
+    const lb=Math.max(targetLb, Math.round((fromLb-wks*1)*2)/2);   // 1 lb a week, sustainable
+    const lab=new Date(dms(d)).toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'});
+    out.push({d, lb, label: lb<=targetLb?`Mid-${lab} · target`:`Mid-${lab}`});
+    if(lb<=targetLb) break;
+  }
+  return out;
+}
 // Exercises that take a dumbbell weight
 const LIFTABLE = ['gobletSquat','attack','splitSquat','bulgarian','slRdl','farmer','row','wristCurl','revCurl','suitcase','bridge'];
 // What gets counted: reps in best round (one side), or seconds held
@@ -832,8 +881,9 @@ function entryTxt(e){
 }
 function liftHist(lifts, ex){ return lifts.filter(l=>l.ex===ex).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0); }
 function stepDial(kg, dir){
-  if(dir>0){ if(kg===0) return DIAL[0]; const nx=DIAL.find(v=>v>kg+1e-9); return nx===undefined?kg:nx; }
-  const pv=[...DIAL].reverse().find(v=>v<kg-1e-9); return pv===undefined?0:pv;
+  const D=CFG.dial;
+  if(dir>0){ if(kg===0) return D[0]; const nx=D.find(v=>v>kg+1e-9); return nx===undefined?kg:nx; }
+  const pv=[...D].reverse().find(v=>v<kg-1e-9); return pv===undefined?0:pv;
 }
 function suggestLift(lifts, ex){
   const h=liftHist(lifts,ex); if(!h.length) return null;
@@ -926,19 +976,28 @@ if (typeof document !== 'undefined') {
   const $=id=>document.getElementById(id);
   const KEY='trailStrength.v1';
   let store={mode:0, bar:true, sound:true, voice:true, history:{}};
-  try{ const raw=localStorage.getItem(KEY); if(raw) store={...store,...JSON.parse(raw)}; }catch(e){}
+  let firstRun=true;
+  try{ const raw=localStorage.getItem(KEY); if(raw){ store={...store,...JSON.parse(raw)}; firstRun=false; } }catch(e){}
   const saveLocal=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} };
   const save=()=>{ saveLocal(); if(typeof scheduleSync==='function') scheduleSync(); };
-  if(!Array.isArray(store.weights)){ store.weights=SEED_WEIGHTS.map(x=>({...x})); save(); }
+  if(!Array.isArray(store.weights)){ store.weights=[]; saveLocal(); }
 
   /* ---- tabs ---- */
   if(!Array.isArray(store.lifts)){ store.lifts=[]; save(); }
   if(!store.daily||typeof store.daily!=='object'){ store.daily={}; save(); }
   if(!store.goals){ store.goals={pu:1,su:1}; save(); }
-  if(!store.af){ store.af={start:'2026-09-01', drinks:[]}; save(); }
-  if(!Array.isArray(store.af.af)){ const t=new Date(); store.af.af=[]; afBackfill(store.af,`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`); save(); }
+  const _t=new Date(), TODAY0=`${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
+  if(!store.af){ store.af={start:TODAY0, drinks:[], af:[], t:{}}; saveLocal(); }
+  if(!Array.isArray(store.af.af)){ store.af.af=[]; afBackfill(store.af,TODAY0); saveLocal(); }
+  function applyProfile(){
+    const P=store.profile;
+    if(!P){ CFG={target:LEGACY_TARGET, milestones:MILESTONES, dial:DIAL, waist:35, afOn:true}; return; }
+    CFG={target:P.targetLb||null, milestones:P.milestones||[], dial:(DIALS[P.dial]||DIALS.dial24).v, waist:P.waistIn||null, afOn:P.afOn!==false};
+  }
+  applyProfile();
   let calYM=null;
   function renderAF(celebrate){
+    if(!CFG.afOn){ $('afCard').innerHTML=''; return; }
     const today=todayStr(), d=addDays(today,dayOff), A=store.af, s=afStats(A,today);
     if(!calYM) calYM=today.slice(0,7);
     const st=afState(A,d), label=dayOff===0?'today':dayOff===-1?'yesterday':'on '+niceDate(d,false);
@@ -1129,11 +1188,11 @@ if (typeof document !== 'undefined') {
     const box=$('liftLog');
     if(!ids.length){ box.classList.add('hidden'); return; }
     box.classList.remove('hidden');
-    const opts=sel=>[0,...DIAL].map(v=>`<option value="${v}"${v===sel?' selected':''}>${kgLab(v)}</option>`).join('');
+    const opts=sel=>[0,...CFG.dial].map(v=>`<option value="${v}"${v===sel?' selected':''}>${kgLab(v)}</option>`).join('');
     box.innerHTML=`<h3>Log today's session</h3><p class="muted" style="margin:-6px 0 6px">Weight is per dumbbell. Reps = your best round (one side). Holds = seconds held — change it only if you dropped early.</p>`+
       ids.map(id=>{
         const sg=suggestLift(store.lifts,id), lift=LIFTABLE.includes(id), secs=METRIC[id]==='secs';
-        const sel=sg&&lift?sg.kg:(EX[id].db?DIAL[0]:0);
+        const sel=sg&&lift?sg.kg:(EX[id].db?CFG.dial[0]:0);
         const dur=work.find(s=>s.ex===id).dur;
         const numVal=secs?dur:'';
         const ph=secs?'secs':'reps';
@@ -1169,9 +1228,11 @@ if (typeof document !== 'undefined') {
   function renderWeight(){
     const ws=store.weights, s=sortW(ws), cur=currentW(ws);
     if(!$('fDate').value) $('fDate').value=todayStr();
-    if(!cur){ $('wStats').innerHTML='<div class="stat"><div class="lbl">No readings yet</div></div>'; $('wChart').innerHTML=''; $('wTable').innerHTML=''; return; }
-    const start=s[0].lb, lost=start-cur.lb, toGo=Math.max(0,cur.lb-TARGET_LB);
-    const pct=Math.max(0,Math.min(100,100*lost/(start-TARGET_LB)));
+    $('wTargetTxt').textContent=CFG.target?`Target ${stlb(CFG.target)} · ${kgTxt(CFG.target)}. `:'No target set — add one under Your setup below. ';
+    renderSetupPanel();
+    if(!cur){ $('wStats').innerHTML='<div class="stat"><div class="lbl">No readings yet</div><div class="sm">Log your first weigh-in below.</div></div>'; $('wChart').innerHTML=''; $('wTable').innerHTML=''; $('wMiles').innerHTML=''; $('wFlags').innerHTML=''; return; }
+    const TG=CFG.target, start=s[0].lb, lost=start-cur.lb, toGo=TG?Math.max(0,cur.lb-TG):0;
+    const pct=TG&&start>TG?Math.max(0,Math.min(100,100*lost/(start-TG))):0;
     const weeks=(dms(s[s.length-1].d)-dms(s[0].d))/WEEK;
     const rate=weeks>=1?lost/weeks:null;
     const waists=s.filter(e=>e.w);
@@ -1179,13 +1240,13 @@ if (typeof document !== 'undefined') {
     $('wStats').innerHTML=`
       <div class="stat"><div class="lbl">Current</div><div class="val">${both(cur.lb)}</div><div class="sm">Average of last ${cur.n} reading${cur.n>1?'s':''}</div></div>
       <div class="stat"><div class="lbl">Lost so far</div><div class="val">${both(lost)}</div><div class="sm">From ${stlb(start)} on ${niceDate(s[0].d)}</div></div>
-      <div class="stat"><div class="lbl">To go</div><div class="val">${toGo>0?both(toGo):'Target reached'}</div><div class="sm">${Math.round(pct)}% of the way to 12 st 7 lb</div><div class="pbar"><i style="width:${pct}%"></i></div></div>
+      <div class="stat"><div class="lbl">To go</div>${TG?`<div class="val">${toGo>0?both(toGo):'Target reached'}</div><div class="sm">${Math.round(pct)}% of the way to ${stlb(TG)}</div><div class="pbar"><i style="width:${pct}%"></i></div>`:'<div class="val">—</div><div class="sm">Set a target under Your setup</div>'}</div>
       <div class="stat"><div class="lbl">Average rate</div><div class="val">${rate===null?'—':num1(rate)+' lb/wk <span class="kg">'+num1(toKg(rate))+' kg/wk</span>'}</div><div class="sm">Healthy range 0.5–1.5 lb/wk</div></div>
-      <div class="stat"><div class="lbl">Waist</div><div class="val">${lastW?inCm(lastW):'—'}</div><div class="sm">${lastW?(lastW<35?'Under the 35 in target':'Target under 35 in · 88.9 cm'):'Add it at your next weigh-in'}</div></div>`;
+      <div class="stat"><div class="lbl">Waist</div><div class="val">${lastW?inCm(lastW):'—'}</div><div class="sm">${lastW?(CFG.waist?(lastW<CFG.waist?`Under the ${CFG.waist} in target`:`Target under ${CFG.waist} in · ${num1(CFG.waist*2.54)} cm`):'Healthy aim: under half your height'):'Add it at your next weigh-in'}</div></div>`;
     $('wFlags').innerHTML=weightFlags(ws,todayStr()).map(x=>`<div class="flag ${x.c}">${x.t}</div>`).join('');
     $('wChart').innerHTML=chartSVG(ws);
     const mo=monthly(ws), today=todayStr();
-    $('wMiles').innerHTML='<tr><th>When</th><th>Aim</th><th>Actual (month avg)</th><th></th></tr>'+MILESTONES.map(q=>{
+    $('wMiles').innerHTML=!(CFG.milestones||[]).length?'<tr><td class="muted">Set a target under Your setup to get monthly milestones.</td></tr>':'<tr><th>When</th><th>Aim</th><th>Actual (month avg)</th><th></th></tr>'+CFG.milestones.map(q=>{
       const m=mo.find(x=>x.k===q.d.slice(0,7));
       let st='<span class="muted">Upcoming</span>';
       if(m){ st=m.lb<=q.lb+0.5?'<span class="ok">On track</span>':`<span class="behind">${stlb(m.lb-q.lb)} over</span>`; }
@@ -1391,6 +1452,59 @@ if (typeof document !== 'undefined') {
     }
     requestAnimationFrame(loop);
   }
+  /* ---- setup (first run + editing) ---- */
+  function setupFields(pref,p){
+    const P=p||{}, cur=P.curLb, tgt=P.targetLb;
+    const st=v=>v?Math.floor(v/14):'', lb=v=>v?num1(v-Math.floor(v/14)*14):'';
+    const dialOpts=Object.entries(DIALS).map(([k,d])=>`<option value="${k}"${(P.dial||'dial24')===k?' selected':''}>${d.label}</option>`).join('');
+    return `<div class="sf">
+      ${pref==='su'?`<label>Your weight now (optional)<div class="pair"><input id="${pref}CurSt" type="number" min="5" max="40" placeholder="st" value="${st(cur)}"><input id="${pref}CurLb" type="number" min="0" max="13.9" step="0.5" placeholder="lb" value="${lb(cur)}"></div></label>`:''}
+      <label>Target weight (optional)<div class="pair"><input id="${pref}TgtSt" type="number" min="5" max="40" placeholder="st" value="${st(tgt)}"><input id="${pref}TgtLb" type="number" min="0" max="13.9" step="0.5" placeholder="lb" value="${lb(tgt)}"></div></label>
+      <label>Dumbbells<select id="${pref}Dial">${dialOpts}</select></label>
+      <label>Alcohol-free tracker<span class="chkrow"><input type="checkbox" id="${pref}AfOn" ${P.afOn!==false?'checked':''} style="width:18px;height:18px"> Show it</span></label>
+      <label>Alcohol-free since<input type="date" id="${pref}AfSince" value="${P.afSince||todayStr()}" max="${todayStr()}"></label>
+    </div>`;
+  }
+  const readLb=(s,l)=>{ const a=parseFloat($(s).value), b=parseFloat($(l).value||'0'); return isNaN(a)?null:a*14+(isNaN(b)?0:b); };
+  function showSetup(){ for(const id of ['daily','home','lifts','weight','player','done']) $(id).classList.add('hidden'); $('setup').classList.remove('hidden'); $('suForm').innerHTML=setupFields('su',{}); }
+  $('suGo')&&$('suGo').addEventListener('click',()=>{
+    const cur=readLb('suCurSt','suCurLb'), tgt=readLb('suTgtSt','suTgtLb'), today=todayStr(), now=Date.now();
+    if(cur!==null&&(cur<70||cur>560)){ $('suMsg').textContent='Check your current weight.'; return; }
+    if(tgt!==null&&(tgt<70||tgt>560)){ $('suMsg').textContent='Check your target weight.'; return; }
+    const afOn=$('suAfOn').checked, since=$('suAfSince').value||today;
+    store.profile={targetLb:tgt, dial:$('suDial').value, afOn, milestones:(cur&&tgt)?genMilestones(cur,tgt,today):[]};
+    store.profileT=now;
+    store.weights=cur?[{d:today,lb:cur,t:now}]:[];
+    store.af={start:since, startT:now, drinks:[], af:[], t:{}}; if(since<today) afBackfill(store.af,today);
+    store.setupDone=true; save(); applyProfile();
+    $('setup').classList.add('hidden'); showTab('daily');
+  });
+  $('suJoin')&&$('suJoin').addEventListener('click',async()=>{
+    const v=$('suCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(v.length!==16){ $('suJoinMsg').textContent='That should be 16 letters and numbers.'; return; }
+    store.sync={code:v.match(/.{4}/g).join('-')}; store.setupDone=true; saveLocal();
+    $('suJoinMsg').textContent='Connecting…'; await syncNow();
+    if(SY.err){ $('suJoinMsg').textContent='Couldn’t connect ('+SY.err+'). Check the code and your connection.'; delete store.sync; delete store.setupDone; saveLocal(); return; }
+    $('setup').classList.add('hidden'); showTab('daily');
+  });
+  function renderSetupPanel(){
+    const b=$('setupBody'); if(!b) return;
+    const P=store.profile||{targetLb:LEGACY_TARGET, dial:'dial24', afOn:true};
+    b.innerHTML=setupFields('se',{...P, afSince:store.af.start})+`<div class="row" style="margin-top:14px"><button class="btn ghost" id="seSave">Save setup</button><span class="muted" id="seMsg"></span></div>`;
+  }
+  $('setupBody').addEventListener('click',e=>{
+    if(e.target.id!=='seSave') return;
+    const tgt=readLb('seTgtSt','seTgtLb'), now=Date.now(), old=store.profile;
+    if(tgt!==null&&(tgt<70||tgt>560)){ $('seMsg').textContent='Check the target weight.'; return; }
+    const sameTarget=old?old.targetLb===tgt:tgt===LEGACY_TARGET;
+    const latest=currentW(store.weights);
+    const ms=sameTarget?(old?old.milestones:MILESTONES):((latest&&tgt)?genMilestones(latest.lb,tgt,todayStr()):[]);
+    store.profile={targetLb:tgt, dial:$('seDial').value, afOn:$('seAfOn').checked, milestones:ms, waistIn:old?old.waistIn:35};
+    store.profileT=now;
+    const since=$('seAfSince').value; if(since&&since!==store.af.start){ store.af.start=since; store.af.startT=now; }
+    save(); applyProfile(); renderWeight(); $('seMsg').textContent='Saved.';
+  });
+
   /* ---- sync ---- */
   const SY={busy:false,again:false,timer:null,lastOk:0,err:''};
   function newCode(){ const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b=new Uint8Array(16); crypto.getRandomValues(b);
@@ -1418,8 +1532,8 @@ if (typeof document !== 'undefined') {
       if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
       const {data:server}=await r.json();
       const {sync:s2,...local}=store;           // re-merge with anything tapped while the request was in flight
-      store={...store,...mergeStores(local,server),sync:s2};
-      saveLocal(); SY.lastOk=Date.now(); SY.err='';
+      store={...store,...mergeStores(server,local),sync:s2};   // server first: on a tie with no timestamps the synced copy wins; newer local taps still win
+      saveLocal(); applyProfile(); SY.lastOk=Date.now(); SY.err='';
       refreshView();
     }catch(e){ SY.err=String(e.message||e); }
     SY.busy=false; syncPill(); renderSyncPanel();
@@ -1461,7 +1575,7 @@ if (typeof document !== 'undefined') {
   setInterval(syncPill,30000);
   renderSyncPanel(); syncPill();
 
-  showTab('daily');
+  if(firstRun&&!store.setupDone) showSetup(); else showTab('daily');
   requestAnimationFrame(loop);
   syncNow();
 }
