@@ -51,6 +51,10 @@
     if (pSrc.profile || a.profile || b.profile) out.profile = pSrc.profile || a.profile || b.profile;
     out.profileT = Math.max(a.profileT || 0, b.profileT || 0);
     if (a.setupDone || b.setupDone) out.setupDone = true;
+    // training plan (goals, exercise on/off, session length)
+    const plSrc = (b.planT || 0) > (a.planT || 0) ? b : a;
+    if (plSrc.plan || a.plan || b.plan) out.plan = plSrc.plan || a.plan || b.plan;
+    out.planT = Math.max(a.planT || 0, b.planT || 0);
     // session history: highest count and latest date
     out.history = {};
     for (const k of new Set([...Object.keys(a.history || {}), ...Object.keys(b.history || {})])) {

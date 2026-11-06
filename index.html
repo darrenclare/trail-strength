@@ -110,6 +110,27 @@ table.t td .kg{display:block;font-size:12px}
 .flag.good{border-color:var(--rest)}.flag.good b{color:var(--rest)}
 .ok{color:var(--rest);font-weight:700}.behind{color:#e6c04a;font-weight:700}
 @media (max-width:860px){.two{grid-template-columns:1fr}}
+/* goals */
+.ggrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:14px}
+.gcard{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;text-align:left;color:var(--text);font:inherit}
+.gcard.on{border-color:var(--rest);background:#15241e}
+.gcard .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:900;color:#111;margin-top:1px}
+.gcard.on .box{background:var(--rest);border-color:var(--rest)}
+.gcard b{display:block;font-size:16px}.gcard span.d{font-size:13px;color:var(--muted)}
+.lrow2{display:grid;grid-template-columns:1.4fr 2fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.lrow2:last-child{border-bottom:0}
+.lrow2 .nm b{display:block}.lrow2 .nm span{font-size:12px;color:var(--muted)}
+.gchip{display:inline-block;font-size:12px;padding:3px 8px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);margin:2px 4px 2px 0}
+.gchip.hit{border-color:#2b6b55;color:var(--rest)}
+.tog{min-width:96px;border-radius:9px;padding:8px 12px;font-weight:700;border:1px solid var(--line);background:var(--panel2);color:var(--muted)}
+.tog.on{background:var(--rest);border-color:var(--rest);color:#111}
+.src{font-size:11px;color:var(--muted);text-align:right;margin-top:3px}
+@media (max-width:700px){
+  .hdr{flex-direction:column;align-items:stretch}.hdrr{justify-content:space-between}
+  .tabs{display:flex;width:100%}.tabs button{flex:1;padding:9px 2px;font-size:13px}
+  .syncpill{order:-1}
+}
+@media (max-width:700px){.lrow2{grid-template-columns:1fr auto}.lrow2 .tags{grid-column:1/-1;order:3}}
 /* sync */
 .hdrr{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .syncpill{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:7px 12px;font-size:13px}
@@ -268,7 +289,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- DAILY -->
 <div id="daily" class="wrap hidden">
   <div class="hdr"><h1>Feel Good Habit Tracker</h1>
-    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="goals">Goals</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <div class="row" style="justify-content:space-between;margin:4px 0 16px">
     <p class="sub" style="margin:0" id="dSub"></p>
     <div class="daypick" id="daySeg"><button data-step="-1" title="Previous day">‹</button><span id="dayLbl"></span><button data-step="1" title="Next day">›</button><button class="linkbtn" data-today>Today</button></div>
@@ -282,14 +303,15 @@ table.t td .kg{display:block;font-size:12px}
 <!-- HOME -->
 <div id="home" class="wrap">
   <div class="hdr"><h1>Feel Good Habit Tracker</h1>
-    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
-  <p class="sub">15–20 minute home sessions for arm pump, leg pump and a stronger lower back. Rotate A → B → C, three times a week.</p>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="goals">Goals</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
+  <p class="sub" id="homeSub">Home sessions built from your goals. Rotate A → B → C, three times a week.</p>
 
   <div class="row">
     <div class="seg" id="modeSeg">
       <button data-mode="0">Weeks 1–2 · Foundation</button>
       <button data-mode="1">Week 3+ · Progressed</button>
     </div>
+    <div class="seg" id="lenSeg"></div>
     <label class="chk"><input type="checkbox" id="barChk"> Pull-up bar available</label>
     <label class="chk"><input type="checkbox" id="soundChk"> Beeps</label>
     <label class="chk"><input type="checkbox" id="voiceChk"> Voice</label>
@@ -308,7 +330,7 @@ table.t td .kg{display:block;font-size:12px}
 <!-- WEIGHT -->
 <div id="weight" class="wrap hidden">
   <div class="hdr"><h1>Feel Good Habit Tracker</h1>
-    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="goals">Goals</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub"><span id="wTargetTxt"></span>Each month's official figure is the average of 5 mornings in a row around mid-month — first thing, after the toilet, before food or drink, same scales.</p>
 
   <div class="stats" id="wStats"></div>
@@ -372,10 +394,26 @@ table.t td .kg{display:block;font-size:12px}
   </div>
 </div>
 
+<!-- GOALS -->
+<div id="goals" class="wrap hidden">
+  <div class="hdr"><h1>Feel Good Habit Tracker</h1>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="goals">Goals</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
+  <p class="sub">Tick what you're training right now. Your three sessions are rebuilt from the exercises switched on below.</p>
+  <div class="ggrid" id="goalGrid"></div>
+  <div id="goalWarn"></div>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin:0">Exercise library <span class="muted" id="libCount" style="font-weight:500"></span></h3>
+      <div class="row"><div class="seg" id="libFilter"><button data-f="on">Switched on</button><button data-f="all">All exercises</button></div><button class="btn ghost" id="libReset">Reset to recommended</button></div>
+    </div>
+    <div id="libList"></div>
+  </div>
+</div>
+
 <!-- LIFTS -->
 <div id="lifts" class="wrap hidden">
   <div class="hdr"><h1>Feel Good Habit Tracker</h1>
-    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
+    <div class="hdrr"><button class="syncpill" data-syncpill title="Sync">⟳ <span class="syncst">Not synced</span></button><nav class="tabs"><button data-tab="daily">Daily</button><button data-tab="home">Sessions</button><button data-tab="goals">Goals</button><button data-tab="lifts">Lifts</button><button data-tab="weight">Weight</button></nav></div></div>
   <p class="sub">Logged after each session: dumbbell weight per hand, reps in your best round, or seconds held. Rate each Easy / Right / Hard — for dumbbell work, Easy steps up one click on the dial and two Hards in a row step down one. Bodyweight work progresses by reps and time.</p>
   <div id="liftCards"></div>
 </div>
@@ -422,9 +460,9 @@ table.t td .kg{display:block;font-size:12px}
 <script src="merge.js"></script>
 <script>
 /* ================= FIGURE RIG ================= */
-const GROUND = 236, BAR_Y = 24;
+const GROUND = 236, BAR_Y = 24, STEP_H = 30;
 const LEN = {neck:52, sho:46, head:11, headR:10, up:28, fore:26, hand:8, thigh:40, shin:38, foot:13};
-const DEF = {t:180, hd:0, bend:0, shr:0,
+const DEF = {t:180, hd:0, bend:0, shr:0, air:0,
   ua:0, fa:0, ha:0, ua2:0, fa2:0, ha2:0,
   th:0, sh:0, ft:90, th2:0, sh2:0, ft2:90};
 const PAIRS = [['ua','ua2'],['fa','fa2'],['ha','ha2'],['th','th2'],['sh','sh2'],['ft','ft2']];
@@ -453,10 +491,16 @@ function lerpPose(a,b,w){const p={};for(const k in DEF)p[k]=a[k]+(b[k]-a[k])*w;r
 function placed(ex,time){
   const A=ex.anim.a,B=ex.anim.b,per=ex.anim.period||3;
   const ph=(time%per)/per, w=(1-Math.cos(2*Math.PI*ph))/2;
-  const pts=solve(lerpPose(A,B,w));
+  const pose=lerpPose(A,B,w), pts=solve(pose);
   let dy;
   if(ex.mode==='bar'){ dy=BAR_Y+2-pts.hand[1]; }
-  else { let maxY=-1e9; for(const k in pts){ if(k==='head')continue; maxY=Math.max(maxY,pts[k][1]); } dy=GROUND-maxY; }
+  else {
+    // ground the lowest point (or a pinned foot standing on a step), then lift for jumps
+    let maxY=-1e9; for(const k in pts){ if(k==='head')continue; if(ex.stepFoot&&(k===ex.stepFoot||k===(ex.stepFoot==='ankle'?'toe':'toe2'))) continue; maxY=Math.max(maxY,pts[k][1]); }
+    dy=GROUND-maxY;
+    if(ex.stepFoot){ const f=pts[ex.stepFoot][1]; dy=Math.min(dy, GROUND-STEP_H-f); }
+    dy-=pose.air||0;
+  }
   const dx=ex.pin.x-pts[ex.pin.pt][0];
   for(const k in pts){pts[k]=[pts[k][0]+dx,pts[k][1]+dy];}
   return pts;
@@ -563,6 +607,60 @@ const EX = {
     why:'Anti-lean core strength plus grip — two problems, one exercise.', load:['Moderate.','Heavy.'],
     anim:{a:{...STAND, ua2:12, fa2:12, ha2:12}, b:{...STAND, t:179, ua2:12, fa2:12, ha2:12}, period:3}, pin:{pt:'ankle',x:200}, db:'near'},
 
+
+  /* ---- library additions ---- */
+  attackShift:{name:'Attack shifts', cues:['Attack position: knees and hips bent, chest low, elbows out','Rock hips back, then forward over the bars — smooth, controlled','Head stays level the whole time'],
+    why:'Moving your weight fore and aft is how you pump terrain and stay balanced on steep, technical ground.', load:['Bodyweight.','Light dumbbell in each hand.'],
+    anim:{a:M(STAND,{t:112,th:38,sh:-22,ua:60,fa:95}), b:M(STAND,{t:138,th:58,sh:-6,ua:50,fa:85}), period:2.4}, pin:{pt:'ankle',x:210}, db:'both'},
+  wallSit:{name:'Wall sit', cues:['Back flat on the wall, thighs parallel to the floor','Knees over ankles, weight in the heels','Breathe — don’t hold your breath'],
+    why:'Pure quad endurance — the burn you feel 3 minutes into a long descent.', load:['Thighs a little above parallel.','Thighs parallel, dumbbell on lap.'],
+    anim:{a:M(STAND,{t:180,th:90,sh:0,ft:90,ua:80,fa:80}), b:M(STAND,{t:179,th:89,sh:0,ft:90,ua:80,fa:80}), period:3}, pin:{pt:'ankle',x:230}, props:['wallback']},
+  slBalance:{name:'Single-leg balance', cues:['Stand on one leg, soft knee, other knee lifted','Eyes on a fixed point; arms out if you need them','Progress: arms crossed, then eyes closed'],
+    why:'Ankle, knee and hip control — the base of every jib, wheel tap and skinny.', load:['Eyes open, fingertip on the desk if needed.','Eyes closed, or stand on a folded towel.'],
+    anim:{a:{...STAND, th:4, sh:-6, th2:80, sh2:-10, ft2:60, ua:70, fa:85, ua2:-60, fa2:-60}, b:{...STAND, t:176, th:6, sh:-8, th2:84, sh2:-12, ft2:60, ua:75, fa:90, ua2:-55, fa2:-55}, period:3}, pin:{pt:'ankle',x:200}},
+  skater:{name:'Skater hops', cues:['Leap sideways from one foot to the other','Land softly on one leg and hold for a second','Knee tracks over the toes — stick every landing'],
+    why:'Explosive side-to-side control: getting the bike across the trail and landing it balanced.',
+    anim:{a:{...STAND, t:150, th:45, sh:-25, th2:-30, sh2:-60, ft2:30, ua:-30, fa:-20, ua2:60, fa2:70}, b:{...STAND, t:170, th:20, sh:-10, th2:10, sh2:-40, ft2:60, ua:40, fa:60, ua2:-20, fa2:-10, air:38}, period:1.4}, pin:{pt:'ankle',x:210}},
+  popSquat:{name:'Pop squats', cues:['Quarter squat, arms back','Drive up hard through the floor — pop!','Land quiet and soft back into the squat'],
+    why:'The pop behind bunny hops and jumps — explosive legs with a controlled landing.',
+    anim:{a:M(STAND,{t:140,th:65,sh:-25,ua:-40,fa:-30}), b:M(STAND,{t:178,th:4,sh:-4,ft:50,ua:115,fa:125,air:40}), period:1.6}, pin:{pt:'ankle',x:210}},
+  squatJump:{name:'Squat jump, stick it', cues:['Full squat, then jump as high as you can','Land in a squat and freeze for 2 seconds','Quality over speed — reset each rep'],
+    why:'Power and landing control together — taking a drop or a jump and staying on line.', load:['Half squat, small jump.','Full squat, max height, 2-second stick.'],
+    anim:{a:M(STAND,{t:145,th:85,sh:-30,ua:-45,fa:-35}), b:M(STAND,{t:178,th:2,sh:-2,ft:45,ua:120,fa:130,air:48}), period:2}, pin:{pt:'ankle',x:210}},
+  stepUp:{name:'Step-up to balance', cues:['One foot on a sturdy step or low chair','Drive up and lift the other knee — hold the balance','Lower slowly; don’t push off the back foot'],
+    why:'Single-leg strength and balance in one — climbing out of the saddle and controlling the bike over obstacles.', load:['Low step, bodyweight.','Higher step, dumbbell in each hand.'],
+    anim:{a:{...STAND, th:70, sh:-10, ft:90, th2:-10, sh2:-10, ft2:90}, b:{...STAND, th:2, sh:-2, ft:90, th2:85, sh2:-15, ft2:70}, period:3}, pin:{pt:'ankle',x:230}, props:['step'], stepFoot:'ankle', db:'both'},
+  calfRaise:{name:'Single-leg calf raise', cues:['Ball of one foot on a step, heel hanging off','Rise up as high as you can, pause','Lower slowly below the step'],
+    why:'Calves and ankles take every landing and keep your feet planted on the pedals.', load:['Both feet, hand on the wall.','One foot, dumbbell in the other hand.'],
+    anim:{a:{...STAND, ft:115, th2:-20, sh2:-60, ft2:40, ua:80, fa:85}, b:{...STAND, ft:55, th2:-20, sh2:-60, ft2:40, ua:80, fa:85, air:10}, period:2.4}, pin:{pt:'ankle',x:200}, props:['step'], stepFoot:'ankle'},
+  superman:{name:'Superman hold', cues:['Face down, arms forward','Lift chest, arms and legs a few centimetres — squeeze glutes','Hold, breathe, keep your neck long (look at the floor)'],
+    why:'Endurance for the muscles that hold your back in position — they’re what spasm when they tire on a long ride.', load:['Lift arms OR legs, short holds.','Arms and legs together.'],
+    anim:{a:M(STAND,{t:90, hd:-8, ua:90, fa:90, ha:90, th:-90, sh:-90, ft:-90}), b:M(STAND,{t:99, hd:-12, ua:100, fa:100, ha:100, th:-98, sh:-98, ft:-98}), period:3}, pin:{pt:'hip',x:200}},
+  slBridge:{name:'Single-leg glute bridge', cues:['On your back, one foot planted, other leg straight out','Drive through the planted heel, lift hips level','Don’t let the hips drop on one side'],
+    why:'Glutes that do their job so your lower back doesn’t have to — one side at a time.', load:['Two-leg bridge with a march.','Single leg, 2-second hold at the top.'],
+    anim:{a:{...M(SUP,{th:135,sh:45,ft:90,ua:90,fa:90}), th2:100, sh2:100, ft2:180}, b:{...M(SUP,{t:-72,hd:-58,th:108,sh:45,ft:90,ua:90,fa:90}), th2:75, sh2:75, ft2:160}, period:3.5}, pin:{pt:'ankle',x:280}},
+  mcgillCurl:{name:'McGill curl-up', cues:['On your back, one knee bent, hands under your lower back','Lift head and shoulders just off the floor — neck stays still','Hold 8–10 seconds, rest, repeat'],
+    why:'Trains the front of your trunk without bending the spine — protects your lower back.',
+    anim:{a:{...M(SUP,{ua:88,fa:92}), th:90, sh:90, ft:180, th2:135, sh2:45, ft2:90}, b:{...M(SUP,{t:-80,hd:-50,ua:88,fa:92}), th:90, sh:90, ft:180, th2:135, sh2:45, ft2:90}, period:3}, pin:{pt:'hip',x:200}},
+  plank:{name:'Forearm plank', cues:['Forearms down, elbows under shoulders','Body straight from heels to head — squeeze glutes','Ribs down, breathe'],
+    why:'Trunk stiffness — so your legs and arms move the bike while your middle stays solid.', load:['Knees down.','Full plank.'],
+    anim:{a:{...M(STAND,{t:100,th:-80,sh:-80,ft:-80}), ua:0, fa:90, ha:90, ua2:0, fa2:90, ha2:90}, b:{...M(STAND,{t:98,th:-82,sh:-82,ft:-82}), ua:0, fa:90, ha:90, ua2:0, fa2:90, ha2:90}, period:3}, pin:{pt:'elbow',x:280}},
+  plankTaps:{name:'Plank shoulder taps', cues:['High plank, feet a little wider than hips','Tap one hand to the opposite shoulder, alternate','Keep hips still — no rocking'],
+    why:'Upper-body stability with your weight on your hands — like holding the bike through rough ground.', load:['Knees down.','Feet together for a harder version.'],
+    anim:{a:M(STAND,{t:110,th:-70,sh:-70,ft:20,ua:0,fa:0,ha:90}), b:{...M(STAND,{t:110,th:-70,sh:-70,ft:20,ua:0,fa:0,ha:90}), ua:60, fa:190, ha:190}, period:1.6}, pin:{pt:'hand2',x:300}},
+  hollowHold:{name:'Hollow hold', cues:['On your back, lower back pressed into the floor','Arms overhead, legs straight and lifted','Bend the knees if your back lifts off'],
+    why:'Deep core control that stops your back arching as you tire.', load:['Knees bent, arms by your sides.','Legs straight, arms overhead.'],
+    anim:{a:M(SUP,{t:-100,hd:-30,ua:-115,fa:-115,th:115,sh:115,ft:150}), b:M(SUP,{t:-98,hd:-30,ua:-112,fa:-112,th:113,sh:113,ft:150}), period:3}, pin:{pt:'hip',x:210}},
+  deepSquat:{name:'Deep squat hold', cues:['Feet shoulder-width, sink as low as you can','Chest up, elbows pushing the knees out','Hold a desk or door frame if needed'],
+    why:'Ankle and hip mobility for a lower, looser attack position.',
+    anim:{a:M(STAND,{t:150,th:115,sh:-40,ua:75,fa:80}), b:M(STAND,{t:154,th:118,sh:-42,ua:78,fa:82}), period:3}, pin:{pt:'ankle',x:210}},
+  dbPress:{name:'Dumbbell shoulder press', cues:['Stand tall, dumbbells at shoulder height','Press straight up, biceps by the ears','Lower slowly; ribs down, don’t arch'],
+    why:'Shoulder strength for absorbing hits through the bars and pushing the bike into the ground.', load:['Light.','Last 3 reps should be hard.'],
+    anim:{a:M(STAND,{ua:20,fa:170}), b:M(STAND,{ua:178,fa:180}), period:2.5}, pin:{pt:'ankle',x:200}, db:'both'},
+  wgsWork:{name:"World's Greatest Stretch (flow)", cues:['Long lunge, both hands down inside the front foot','Elbow toward the instep, then sweep the arm up to the ceiling','Flow through it — one rep every few seconds'],
+    why:'Hips, hamstrings and upper back opened in one flowing move.',
+    anim:{a:{...STAND, t:118, th:82, sh:-6, ft:90, th2:-48, sh2:-50, ft2:20, ua:6, fa:8, ha:10, ua2:2, fa2:2, ha2:5}, b:{...STAND, t:112, th:82, sh:-6, ft:90, th2:-48, sh2:-50, ft2:20, ua:178, fa:180, ha:180, ua2:2, fa2:2, ha2:5}, period:4}, pin:{pt:'ankle',x:240}},
+
   /* Stretches */
   hipFlexor:{name:'Kneeling hip flexor stretch', cues:['Back knee down (on a cushion), front foot flat','Squeeze the back-side glute, tuck your pelvis','Shift hips gently forward — feel the front of the back hip'],
     why:'Tight hip flexors from riding and sitting pull on your lower back.',
@@ -603,6 +701,160 @@ const EX = {
     anim:{a:{...M(SUP,{ua:160,fa:110}), th:120, sh:50, ft:90, th2:160, sh2:100, ft2:100},
           b:{...M(SUP,{ua:165,fa:115}), th:128, sh:50, ft:90, th2:170, sh2:108, ft2:100}, period:5}, pin:{pt:'hip',x:200}},
 };
+
+/* ================= LIBRARY + GOALS ================= */
+const GOALS = [
+  {k:'back', name:'Lower back', blurb:'Endurance so your back lasts a long ride without spasming'},
+  {k:'attack', name:'Attack position', blurb:'Legs, glutes and upper back that hold position on long descents'},
+  {k:'balance', name:'Balance & jibbing', blurb:'Single-leg control, landings and quick weight shifts'},
+  {k:'power', name:'Pop & power', blurb:'Explosive legs for bunny hops, pumps and jumps'},
+  {k:'core', name:'Core', blurb:'A solid middle so arms and legs can move the bike'},
+  {k:'upper', name:'Upper body & absorbing', blurb:'Pushing, pulling and soaking up hits through the bars'},
+  {k:'grip', name:'Grip / arm pump', blurb:'Forearm and grip endurance'},
+  {k:'mobility', name:'Mobility', blurb:'Hips, ankles and upper back that move freely'},
+];
+// One entry per movement. ex: [foundation, progressed] or one id. w: seconds of work. sides: two labels if done each side.
+// back: loads the lower back (max one per session). needs: equipment. rec:false = in the library but not switched on by its goal.
+const LIB = [
+  {id:'popSquat', ex:'popSquat', goals:['power'], w:30},
+  {id:'squatJump', ex:'squatJump', goals:['power','balance'], w:[25,30]},
+  {id:'skater', ex:'skater', goals:['balance','power'], w:30},
+  {id:'gobletSquat', ex:'gobletSquat', goals:['attack','power'], w:40},
+  {id:'attack', ex:'attack', goals:['attack'], w:40},
+  {id:'attackShift', ex:'attackShift', goals:['attack','balance'], w:40},
+  {id:'wallSit', ex:'wallSit', goals:['attack'], w:[30,45], needs:'wall', rec:false},
+  {id:'splitSquat', ex:['splitSquat','bulgarian'], goals:['attack','balance'], w:30, sides:['Left leg forward','Right leg forward']},
+  {id:'stepUp', ex:'stepUp', goals:['balance','attack'], w:30, sides:['Left foot up','Right foot up'], needs:'step'},
+  {id:'slBalance', ex:'slBalance', goals:['balance'], w:[30,40], sides:['On left leg','On right leg']},
+  {id:'calfRaise', ex:'calfRaise', goals:['balance'], w:30, sides:['Left foot','Right foot'], needs:'step', rec:false},
+  {id:'slRdl', ex:'slRdl', goals:['back','balance','attack'], w:30, sides:['Standing on left leg','Standing on right leg'], back:true},
+  {id:'row', ex:'row', goals:['attack','upper'], w:40, back:true},
+  {id:'pushup', ex:['inclinePush','pushup'], goals:['upper'], w:40},
+  {id:'dbPress', ex:'dbPress', goals:['upper'], w:40, rec:false},
+  {id:'plankTaps', ex:'plankTaps', goals:['upper','core'], w:30},
+  {id:'deadHang', ex:'deadHang', goals:['grip','back','upper'], w:[20,30], needs:'bar'},
+  {id:'scapPull', ex:'scapPull', goals:['grip','upper'], w:30, needs:'bar', rec:false},
+  {id:'farmer', ex:'farmer', goals:['grip'], w:40},
+  {id:'wristCurl', ex:'wristCurl', goals:['grip'], w:30},
+  {id:'revCurl', ex:'revCurl', goals:['grip'], w:30},
+  {id:'bridge', ex:'bridge', goals:['back','attack'], w:40},
+  {id:'slBridge', ex:'slBridge', goals:['back'], w:30, sides:['Left foot down','Right foot down'], rec:false},
+  {id:'superman', ex:'superman', goals:['back'], w:[25,35]},
+  {id:'birdDog', ex:'birdDog', goals:['back','core','balance'], w:30, sides:['Right arm, left leg','Left arm, right leg']},
+  {id:'mcgillCurl', ex:'mcgillCurl', goals:['back','core'], w:40},
+  {id:'sidePlank', ex:['kneePlank','sidePlank'], goals:['back','core'], w:[25,30], sides:['Left elbow down','Right elbow down']},
+  {id:'suitcase', ex:'suitcase', goals:['back','core','grip'], w:30, sides:['Weight in left hand','Weight in right hand']},
+  {id:'deadBug', ex:'deadBug', goals:['core','back'], w:40},
+  {id:'plank', ex:'plank', goals:['core'], w:[30,40]},
+  {id:'hollowHold', ex:'hollowHold', goals:['core'], w:[20,30], rec:false},
+  {id:'deepSquat', ex:'deepSquat', goals:['mobility'], w:40},
+  {id:'wgsWork', ex:'wgsWork', goals:['mobility','balance'], w:40, sides:['Left leg forward','Right leg forward'], rec:false},
+];
+const NEEDS = {bar:'pull-up bar', step:'step or low chair', wall:'clear wall'};
+const LENGTHS = [15,20,30,45];
+const DEFAULT_PLAN_LEGACY = {goals:['back','attack','balance'], on:{}, minutes:20};
+const DEFAULT_PLAN_NEW = {goals:['back','attack','core'], on:{}, minutes:20};
+
+function libActive(plan, bar){
+  const G=new Set(plan.goals||[]);
+  return LIB.filter(it=>{
+    if(it.needs==='bar'&&!bar) return false;
+    const o=(plan.on||{})[it.id];
+    if(o===true||o===false) return o;
+    return it.rec!==false && it.goals.some(g=>G.has(g));
+  });
+}
+const _wOf=(it,mode)=>Array.isArray(it.w)?it.w[mode]:it.w;
+function moveSecs(it,mode,rest){ const w=_wOf(it,mode); return it.sides?2*w+10+rest:w+rest; }
+
+// Build up to three rotating sessions (A/B/C) from the active movements, fitted to the chosen length.
+function generateSessions(plan, bar, mode, history){
+  const minutes=plan.minutes||20, G=(plan.goals||[]).filter(g=>GOALS.some(x=>x.k===g));
+  const act=libActive(plan,bar);
+  const out={};
+  if(!act.length) return out;
+  // interleave by primary goal so each session gets a mix
+  const prim=it=>it.goals.find(g=>G.includes(g))||it.goals[0];
+  const queues={}; for(const it of act){ (queues[prim(it)] ||= []).push(it); }
+  const order=[...G, ...Object.keys(queues).filter(g=>!G.includes(g))];
+  const L=[]; let more=true; while(more){ more=false; for(const g of order){ const q=queues[g]; if(q&&q.length){ L.push(q.shift()); more=true; } } }
+  const nS=Math.min(3, L.length), keys=['A','B','C'].slice(0,nS), pools=keys.map(()=>[]), load=keys.map(()=>0), backs=keys.map(()=>0);
+  for(const it of L){
+    let best=-1;
+    for(let i=0;i<nS;i++){ if(it.back&&backs[i]) continue; if(best<0||load[i]<load[best]) best=i; }
+    if(best<0) best=load.indexOf(Math.min(...load));
+    pools[best].push(it); load[best]+=moveSecs(it,mode,20); if(it.back) backs[best]++;
+  }
+  const stretchEach = minutes>=45?45:30, stretchN = minutes>=30?8:6;
+  keys.forEach((k,i)=>{
+    let pool=pools[i].slice().sort((a,b)=>LIB.indexOf(a)-LIB.indexOf(b));
+    const cnt={}; pool.forEach(it=>{ const g=prim(it); cnt[g]=(cnt[g]||0)+1; });
+    const gs=[...new Set(pool.flatMap(it=>it.goals.filter(g=>G.includes(g))))].sort((a,b)=>(cnt[b]||0)-(cnt[a]||0)||G.indexOf(a)-G.indexOf(b));
+    const warm=pickWarm(gs), stretch=pickStretch(gs, stretchN, stretchEach);
+    const fixed=8+warm.length*30+10+stretch.reduce((a,s)=>a+s.d,0);
+    const budget=minutes*60-fixed;
+    // rotate the pool so movements that don't fit this time come first next time
+    const off=pool.length?((history&&history[k]&&history[k].count)||0)%pool.length:0;
+    const rot=pool.slice(off).concat(pool.slice(0,off));
+    const roundT=n=>rot.slice(0,n).reduce((a,it)=>a+moveSecs(it,mode,20),0)-20;
+    let kN=rot.length, R=2;
+    while(kN>1 && 2*roundT(kN)+30 > budget) kN--;
+    if(2*roundT(kN)+30 > budget) R=1;
+    while(R<3 && (R+1)*roundT(kN)+30*R <= budget) R++;
+    let chosen=rot.slice(0,kN);
+    // long sessions: rather than a 4th round, bring in more movements from the rest of the plan
+    if(kN===rot.length){
+      const used=new Set(chosen.map(it=>it.id)); let hasBack=chosen.some(it=>it.back);
+      const extra=L.filter(it=>!used.has(it.id)).sort((a,b)=>(a.back?1:0)-(b.back?1:0));
+      for(const it of extra){
+        if(it.back&&hasBack) continue;
+        const t=chosen.reduce((a,x)=>a+moveSecs(x,mode,20),0)+moveSecs(it,mode,20)-20;
+        if(R*t+30*(R-1)<=budget){ chosen.push(it); used.add(it.id); if(it.back) hasBack=true; }
+      }
+    }
+    chosen=chosen.sort((a,b)=>LIB.indexOf(a)-LIB.indexOf(b));
+    const work=[];
+    chosen.forEach(it=>{
+      if(it.sides){ work.push({ex:it.ex, w:it.w, r:10, side:it.sides[0], lib:it.id}); work.push({ex:it.ex, w:it.w, r:20, side:it.sides[1], lib:it.id}); }
+      else work.push({ex:it.ex, w:it.w, r:20, lib:it.id});
+    });
+    const cc={}; chosen.forEach(it=>{ const g=prim(it); cc[g]=(cc[g]||0)+1; });
+    const top=Object.keys(cc).sort((a,b)=>cc[b]-cc[a]||G.indexOf(a)-G.indexOf(b));
+    const names=top.map(g=>GOALS.find(x=>x.k===g).name);
+    const tag=names.slice(0,2).join(' · ')||'Mixed';
+    out[k]={name:`Session ${k}`, tag, rounds:R, warm, work, stretch, pool:pool.map(it=>it.id), skipped:rot.slice(kN).map(it=>it.id)};
+  });
+  return out;
+}
+function pickWarm(gs){
+  const w=['march','hipHinge'];
+  if(gs.some(g=>['attack','balance','power'].includes(g))) w.push('legSwings');
+  if(gs.some(g=>['back','core','mobility'].includes(g))) w.push('catCow');
+  if(gs.some(g=>['upper','grip'].includes(g))) w.push('armSwings');
+  if(gs.includes('grip')) w.push('wristRolls');
+  if(w.length<4) w.push('bwSquat');
+  return w.slice(0,4);
+}
+function pickStretch(gs, n, d){
+  const pairs=(ex,a,b)=>[{ex,d,side:a},{ex,d,side:b}];
+  const by={
+    back:[{ex:'childPose',d}, ...pairs('figure4','Left ankle over right knee','Right ankle over left knee')],
+    attack:[...pairs('hipFlexor','Left knee down','Right knee down'), ...pairs('quad','Left leg','Right leg')],
+    balance:[...pairs('calf','Left leg back','Right leg back')],
+    power:[...pairs('hamstring','Left leg','Right leg')],
+    core:[{ex:'catCow',d}],
+    upper:[{ex:'chest',d}],
+    grip:[...pairs('forearmFlex','Left arm','Right arm')],
+    mobility:[...pairs('wgs','Left leg forward','Right leg forward')],
+  };
+  const list=[]; const seen=new Set();
+  const add=s=>{ const key=s.ex+'|'+(s.side||''); if(!seen.has(key)){ seen.add(key); list.push(s); } };
+  // take a pair from each goal in turn so every goal gets a stretch
+  let more=true, idx=0;
+  while(more && list.length<n){ more=false; for(const g of gs){ const arr=by[g]||[]; const chunk=arr.slice(idx, idx+2); if(chunk.length){ chunk.forEach(add); more=true; } if(list.length>=n) break; } idx+=2; }
+  if(!list.length) [{ex:'childPose',d},{ex:'catCow',d}].forEach(add);
+  return list.slice(0,n);
+}
 
 /* ================= SESSIONS ================= */
 // ex / w can be [foundation, progressed]. noBar = substitute when no pull-up bar.
@@ -688,7 +940,7 @@ function buildSteps(key, mode, bar){
   for(let r=1;r<=s.rounds;r++){
     s.work.forEach((e,j)=>{
       const cur=resolve(e);
-      steps.push({type:'work', dur:pick(e.w), ex:cur.ex, side:cur.side, round:r, rounds:s.rounds});
+      steps.push({type:'work', dur:pick(e.w), ex:cur.ex, side:cur.side, round:r, rounds:s.rounds, lib:e.lib});
       const last=j===s.work.length-1;
       if(!last){ const nx=resolve(s.work[j+1]); steps.push({type:'rest', dur:e.r, ex:nx.ex, side:nx.side}); }
       else if(r<s.rounds){ const nx=resolve(s.work[0]); steps.push({type:'break', dur:30, ex:nx.ex, side:nx.side}); }
@@ -745,6 +997,8 @@ function drawSVG(ex,time){
   const R=(x,y,w,h,rx=3)=>`<rect x="${(+x).toFixed(1)}" y="${(+y).toFixed(1)}" width="${(+w).toFixed(1)}" height="${(+h).toFixed(1)}" rx="${rx}" fill="${PROPF}" stroke="${PROPS}" stroke-width="1"/>`;
   let pr='';
   if(props.includes('seat')) pr+=R(p.hip[0]-26,p.hip[1]+8,42,GROUND-p.hip[1]-8);
+  if(props.includes('step')){ const f=ex.stepFoot==='ankle2'?p.ankle2:p.ankle; const x=f[0]-22; pr+=R(x,GROUND-STEP_H+5,54,STEP_H,2); }
+  if(props.includes('wallback')){ const x=p.hip[0]-16; pr+=R(x-10,14,10,GROUND-14,1); }
   if(props.includes('box')){ const top=Math.max(p.ankle2[1],p.toe2[1])+5; pr+=R(p.ankle2[0]-26,top,46,GROUND-top); }
   if(props.includes('desk')){ const top=Math.max(p.hand[1],p.hand2[1])+4, x=p.hand[0]-14; pr+=R(x+70,top,7,GROUND-top,1)+R(x+4,top,7,GROUND-top,1)+R(x,top,90,7,2); }
   if(props.includes('wall')){ const x=Math.max(p.hand[0],p.hand2[0])+6; pr+=R(x,14,10,GROUND-14,1); }
@@ -879,11 +1133,13 @@ function genMilestones(fromLb, targetLb, fromDate){
   return out;
 }
 // Exercises that take a dumbbell weight
-const LIFTABLE = ['gobletSquat','attack','splitSquat','bulgarian','slRdl','farmer','row','wristCurl','revCurl','suitcase','bridge'];
+const LIFTABLE = ['gobletSquat','attack','splitSquat','bulgarian','slRdl','farmer','row','wristCurl','revCurl','suitcase','bridge','attackShift','stepUp','calfRaise','dbPress','wallSit','slBridge'];
 // What gets counted: reps in best round (one side), or seconds held
 const METRIC = {gobletSquat:'reps',splitSquat:'reps',bulgarian:'reps',slRdl:'reps',row:'reps',wristCurl:'reps',revCurl:'reps',
   pushup:'reps',inclinePush:'reps',scapPull:'reps',bridge:'reps',birdDog:'reps',deadBug:'reps',
-  attack:'secs',deadHang:'secs',farmer:'secs',suitcase:'secs',kneePlank:'secs',sidePlank:'secs'};
+  attack:'secs',deadHang:'secs',farmer:'secs',suitcase:'secs',kneePlank:'secs',sidePlank:'secs',
+  attackShift:'secs',wallSit:'secs',slBalance:'secs',skater:'reps',popSquat:'reps',squatJump:'reps',stepUp:'reps',calfRaise:'reps',
+  superman:'secs',slBridge:'reps',mcgillCurl:'reps',plank:'secs',plankTaps:'reps',hollowHold:'secs',deepSquat:'secs',dbPress:'reps',wgsWork:'reps'};
 const LOGGABLE = Object.keys(METRIC);
 const kgLab = kg => kg===0 ? 'Bodyweight' : `${num1(kg)} kg · ${num1(kg*2.20462)} lb`;
 const nTxt = (ex,n) => n==null ? '' : METRIC[ex]==='secs' ? `${n} s` : `${n} reps`;
@@ -1001,12 +1257,19 @@ if (typeof document !== 'undefined') {
   const _t=new Date(), TODAY0=`${_t.getFullYear()}-${String(_t.getMonth()+1).padStart(2,'0')}-${String(_t.getDate()).padStart(2,'0')}`;
   if(!store.af){ store.af={start:TODAY0, drinks:[], af:[], t:{}}; saveLocal(); }
   if(!Array.isArray(store.af.af)){ store.af.af=[]; afBackfill(store.af,TODAY0); saveLocal(); }
+  const getPlan=()=>store.plan||JSON.parse(JSON.stringify(store.profile?DEFAULT_PLAN_NEW:DEFAULT_PLAN_LEGACY));
+  function setPlan(fn){ const p=getPlan(); fn(p); store.plan=p; store.planT=Date.now(); save(); rebuildSessions(); }
+  function rebuildSessions(){
+    for(const k of ['A','B','C']) delete SESSIONS[k];
+    Object.assign(SESSIONS, generateSessions(getPlan(), store.bar, store.mode, store.history));
+  }
   function applyProfile(){
     const P=store.profile;
     if(!P){ CFG={target:LEGACY_TARGET, milestones:MILESTONES, dial:DIAL, waist:35, afOn:true}; return; }
     CFG={target:P.targetLb||null, milestones:P.milestones||[], dial:(DIALS[P.dial]||DIALS.dial24).v, waist:P.waistIn||null, afOn:P.afOn!==false};
   }
   applyProfile();
+  rebuildSessions();
   let calYM=null;
   function renderAF(celebrate){
     if(!CFG.afOn){ $('afCard').innerHTML=''; return; }
@@ -1165,26 +1428,52 @@ if (typeof document !== 'undefined') {
     const n=parseInt(g.value,10); if(n>=1){ store.goals[g.dataset.goal]=n; store.goalsT=Date.now(); save(); renderDaily(); }
   });
   function showTab(tab){
-    for(const id of ['daily','home','lifts','weight']) $(id).classList.toggle('hidden',tab!==id);
+    for(const id of ['daily','home','goals','lifts','weight']) $(id).classList.toggle('hidden',tab!==id);
     $('player').classList.add('hidden');
     $('done').classList.add('hidden');
     document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-    if(tab==='weight'){ renderWeight(); renderSyncPanel(); } else if(tab==='lifts') renderLifts(); else if(tab==='daily'){ dayOff=0; renderDaily(); } else renderHome();
+    if(tab==='weight'){ renderWeight(); renderSyncPanel(); } else if(tab==='lifts') renderLifts(); else if(tab==='daily'){ dayOff=0; renderDaily(); } else if(tab==='goals') renderGoals(); else renderHome();
     P.lastTab=tab;
     window.scrollTo(0,0);
   }
 
+  /* ---- goals page ---- */
+  let libFilter='on';
+  function renderGoals(){
+    const plan=getPlan(), G=new Set(plan.goals), act=new Set(libActive(plan,store.bar).map(i=>i.id));
+    $('goalGrid').innerHTML=GOALS.map(g=>`<button class="gcard ${G.has(g.k)?'on':''}" data-goal-k="${g.k}"><span class="box">${G.has(g.k)?'✓':''}</span><span><b>${g.name}</b><span class="d">${g.blurb}</span></span></button>`).join('');
+    $('goalWarn').innerHTML=G.size>3?`<div class="flag warn"><b>${G.size} goals ticked.</b> In ${plan.minutes||20}-minute sessions that spreads each one thin — 3 at a time works best. Rotate goals every month or two instead.</div>`:(G.size===0?'<div class="flag info"><b>No goals ticked.</b> Tick one or more, or switch exercises on by hand below.</div>':'');
+    document.querySelectorAll('#libFilter button').forEach(b=>b.classList.toggle('on',b.dataset.f===libFilter));
+    $('libCount').textContent=`· ${act.size} of ${LIB.length} switched on`;
+    const rows=LIB.filter(it=>libFilter==='all'||act.has(it.id)).map(it=>{
+      const o=(plan.on||{})[it.id], on=act.has(it.id), exIds=[].concat(it.ex), exName=EX[exIds[0]].name+(exIds[1]?` → ${EX[exIds[1]].name}`:'');
+      const src=it.needs==='bar'&&!store.bar?'Needs a pull-up bar (off on Sessions)':o===true?'Added by you':o===false?'Removed by you':on?'From your goals':it.rec===false?'Optional extra':'Not in your goals';
+      const tags=it.goals.map(g=>`<span class="gchip ${G.has(g)?'hit':''}">${GOALS.find(x=>x.k===g).name}</span>`).join('')+(it.needs?`<span class="gchip">Needs ${NEEDS[it.needs]}</span>`:'')+(it.back?'<span class="gchip">Loads lower back</span>':'');
+      return `<div class="lrow2"><div class="nm"><b>${exName}</b><span>${EX[exIds[0]].why}</span></div><div class="tags">${tags}</div>
+        <div><button class="tog ${on?'on':''}" data-lib="${it.id}" ${it.needs==='bar'&&!store.bar?'disabled':''}>${on?'✓ On':'Off'}</button><div class="src">${src}</div></div></div>`;
+    }).join('');
+    $('libList').innerHTML=rows||'<p class="muted">Nothing switched on yet — tick a goal above or show all exercises.</p>';
+  }
+  $('goalGrid').addEventListener('click',e=>{ const b=e.target.closest('[data-goal-k]'); if(!b) return; const k=b.dataset.goalK;
+    setPlan(p=>{ const s=new Set(p.goals); s.has(k)?s.delete(k):s.add(k); p.goals=GOALS.map(g=>g.k).filter(x=>s.has(x)); }); renderGoals(); });
+  $('libList').addEventListener('click',e=>{ const b=e.target.closest('[data-lib]'); if(!b||b.disabled) return; const id=b.dataset.lib;
+    setPlan(p=>{ p.on ||= {}; const it=LIB.find(x=>x.id===id); const G=new Set(p.goals);
+      const auto=it.rec!==false&&it.goals.some(g=>G.has(g)); const cur=p.on[id]===undefined?auto:p.on[id];
+      const next=!cur; if(next===auto) delete p.on[id]; else p.on[id]=next; }); renderGoals(); });
+  $('libFilter').addEventListener('click',e=>{ const b=e.target.closest('[data-f]'); if(!b) return; libFilter=b.dataset.f; renderGoals(); });
+  $('libReset').addEventListener('click',()=>{ setPlan(p=>{ p.on={}; }); renderGoals(); });
+
   /* ---- lifts page ---- */
   function renderLifts(){
-    const groups=[['A','Session A · Legs'],['B','Session B · Grip & Upper'],['C','Session C · Core & Back']];
-    // group by each session's main version (bar available); no-bar substitutes not used elsewhere land in B
+    rebuildSessions();
+    const groups=['A','B','C'].filter(k=>SESSIONS[k]).map(k=>[k,SESSIONS[k].name]);
     const groupIds={}, seen=new Set();
     for(const [k] of groups){
       groupIds[k]=[];
-      for(const m of [0,1]) for(const st of buildSteps(k,m,true))
-        if(st.type==='work'&&LOGGABLE.includes(st.ex)&&!seen.has(st.ex)){ groupIds[k].push(st.ex); seen.add(st.ex); }
+      for(const e of SESSIONS[k].work){ for(const id of [].concat(e.ex)) if(LOGGABLE.includes(id)&&!seen.has(id)){ groupIds[k].push(id); seen.add(id); } }
     }
-    LOGGABLE.filter(id=>!seen.has(id)).forEach(id=>groupIds.B.push(id));
+    const other=LOGGABLE.filter(id=>!seen.has(id)&&liftHist(store.lifts,id).length);
+    if(other.length){ groups.push(['X','Logged before — not in your current plan']); groupIds.X=other; }
     let html='';
     for(const [k,title] of groups){
       const ids=groupIds[k];
@@ -1336,15 +1625,22 @@ if (typeof document !== 'undefined') {
 
   function nextSuggested(){
     let lastKey=null,lastT=0;
-    for(const k of ['A','B','C']){ const h=store.history[k]; if(h&&h.last>lastT){lastT=h.last;lastKey=k;} }
-    return lastKey?{A:'B',B:'C',C:'A'}[lastKey]:'A';
+    const ks=['A','B','C'].filter(k=>SESSIONS[k]);
+    if(!ks.length) return null;
+    for(const k of ks){ const h=store.history[k]; if(h&&h.last>lastT){lastT=h.last;lastKey=k;} }
+    return lastKey?ks[(ks.indexOf(lastKey)+1)%ks.length]:ks[0];
   }
 
   function renderHome(){
     document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.mode===store.mode));
     $('barChk').checked=store.bar; $('soundChk').checked=store.sound; $('voiceChk').checked=store.voice;
+    rebuildSessions();
+    const plan=getPlan(), mins=plan.minutes||20;
+    $('lenSeg').innerHTML=LENGTHS.map(m=>`<button data-len="${m}" class="${m===mins?'on':''}">${m} min</button>`).join('');
     const nx=nextSuggested();
-    $('cards').innerHTML=Object.entries(SESSIONS).filter(([k,s])=>!s.daily).map(([k,s])=>{
+    const list=Object.entries(SESSIONS).filter(([k,s])=>!s.daily);
+    if(!list.length){ $('cards').innerHTML=`<div class="card"><h2>No exercises switched on</h2><p class="muted">Tick at least one goal on the Goals tab and your sessions will build themselves.</p><button class="btn" data-tab="goals">Choose goals</button></div>`; $('homeQuote').textContent=''; return; }
+    $('cards').innerHTML=list.map(([k,s])=>{
       const steps=buildSteps(k,store.mode,store.bar);
       const names=[...new Set(steps.filter(x=>x.type==='work').map(x=>EX[x.ex].name))];
       const h=store.history[k];
@@ -1352,14 +1648,17 @@ if (typeof document !== 'undefined') {
       return `<div class="card ${k===nx?'next':''}">${k===nx?'<span class="badge">UP NEXT</span>':''}
         <div class="tag">${s.tag}</div><h2>${s.name}</h2>
         <ul>${names.map(n=>`<li>${n}</li>`).join('')}</ul>
-        <div class="cfoot"><div class="meta"><span>${Math.round(totalSecs(steps)/60)} min</span><span>${last}</span></div>
+        ${s.skipped&&s.skipped.length?`<div class="muted" style="font-size:12px">Rotates in next time: ${s.skipped.map(id=>EX[[].concat(LIB.find(x=>x.id===id).ex)[store.mode]||[].concat(LIB.find(x=>x.id===id).ex)[0]].name).join(', ')}</div>`:''}
+        ${totalSecs(steps)<mins*60*0.8?`<div class="muted" style="font-size:12px">Shorter than ${mins} min — switch on more goals or exercises to fill it.</div>`:''}
+        <div class="cfoot"><div class="meta"><span>${Math.round(totalSecs(steps)/60)} min · ${s.rounds} round${s.rounds>1?'s':''}</span><span>${last}</span></div>
         <button class="btn" data-start="${k}">Start</button></div></div>`;
     }).join('');
     $('homeQuote').textContent='\u201C'+quote()+'\u201D';
   }
 
-  $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;store.mode=+b.dataset.mode;store.setT=Date.now();save();renderHome();});
-  $('barChk').addEventListener('change',e=>{store.bar=e.target.checked;store.setT=Date.now();save();renderHome();});
+  $('lenSeg').addEventListener('click',e=>{const b=e.target.closest('[data-len]'); if(!b) return; setPlan(p=>{p.minutes=+b.dataset.len;}); renderHome();});
+  $('modeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;store.mode=+b.dataset.mode;store.setT=Date.now();save();rebuildSessions();renderHome();});
+  $('barChk').addEventListener('change',e=>{store.bar=e.target.checked;store.setT=Date.now();save();rebuildSessions();renderHome();});
   $('soundChk').addEventListener('change',e=>{store.sound=e.target.checked;store.setT=Date.now();save();});
   $('voiceChk').addEventListener('change',e=>{store.voice=e.target.checked;store.setT=Date.now();save();});
   $('cards').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(b)start(b.dataset.start);});
@@ -1382,8 +1681,8 @@ if (typeof document !== 'undefined') {
   function start(key){
     P.key=key; P.steps=buildSteps(key,store.mode,store.bar); P.total=totalSecs(P.steps);
     P.sumBefore=[]; let acc=0; P.steps.forEach(s=>{P.sumBefore.push(acc);acc+=s.dur;});
-    for(const id of ['daily','home','lifts','weight','done']) $(id).classList.add('hidden'); $('player').classList.remove('hidden');
-    $('pTitle').textContent=SESSIONS[key].name+(SESSIONS[key].daily?'':(store.mode?' · Progressed':' · Foundation'));
+    for(const id of ['daily','home','goals','lifts','weight','done']) $(id).classList.add('hidden'); $('player').classList.remove('hidden');
+    $('pTitle').textContent=(SESSIONS[key]||{name:'Session'}).name+(SESSIONS[key].daily?'':(store.mode?' · Progressed':' · Foundation'));
     try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
     P.draft={}; P.autoPaused=false;
     P.running=true; $('playBtn').textContent='Pause';
@@ -1527,7 +1826,7 @@ if (typeof document !== 'undefined') {
     </div>`;
   }
   const readLb=(s,l)=>{ const a=parseFloat($(s).value), b=parseFloat($(l).value||'0'); return isNaN(a)?null:a*14+(isNaN(b)?0:b); };
-  function showSetup(){ for(const id of ['daily','home','lifts','weight','player','done']) $(id).classList.add('hidden'); $('setup').classList.remove('hidden'); $('suForm').innerHTML=setupFields('su',{}); }
+  function showSetup(){ for(const id of ['daily','home','goals','lifts','weight','player','done']) $(id).classList.add('hidden'); $('setup').classList.remove('hidden'); $('suForm').innerHTML=setupFields('su',{}); }
   $('suGo')&&$('suGo').addEventListener('click',()=>{
     const cur=readLb('suCurSt','suCurLb'), tgt=readLb('suTgtSt','suTgtLb'), today=todayStr(), now=Date.now();
     if(cur!==null&&(cur<70||cur>560)){ $('suMsg').textContent='Check your current weight.'; return; }
@@ -1594,7 +1893,7 @@ if (typeof document !== 'undefined') {
       const {data:server}=await r.json();
       const {sync:s2,...local}=store;           // re-merge with anything tapped while the request was in flight
       store={...store,...mergeStores(server,local),sync:s2};   // server first: on a tie with no timestamps the synced copy wins; newer local taps still win
-      saveLocal(); applyProfile(); SY.lastOk=Date.now(); SY.err='';
+      saveLocal(); applyProfile(); rebuildSessions(); SY.lastOk=Date.now(); SY.err='';
       refreshView();
     }catch(e){ SY.err=String(e.message||e); }
     SY.busy=false; syncPill(); renderSyncPanel();
@@ -1603,8 +1902,8 @@ if (typeof document !== 'undefined') {
   function refreshView(){
     if(!$('player').classList.contains('hidden')||!$('done').classList.contains('hidden')) return; // don't disturb a workout
     if(document.activeElement&&['INPUT','SELECT'].includes(document.activeElement.tagName)) return; // or a half-typed entry
-    const vis=['daily','home','lifts','weight'].find(id=>!$(id).classList.contains('hidden'));
-    if(vis==='daily') renderDaily(); else if(vis==='lifts') renderLifts(); else if(vis==='weight') renderWeight(); else if(vis==='home') renderHome();
+    const vis=['daily','home','goals','lifts','weight'].find(id=>!$(id).classList.contains('hidden'));
+    if(vis==='goals') renderGoals(); else if(vis==='daily') renderDaily(); else if(vis==='lifts') renderLifts(); else if(vis==='weight') renderWeight(); else if(vis==='home') renderHome();
   }
   function renderSyncPanel(){
     const b=$('syncBody'); if(!b) return;
