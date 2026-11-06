@@ -1092,9 +1092,11 @@ if (typeof document !== 'undefined') {
     $('dSub').textContent=niceDate(today)+' · 10 minutes every morning.';
     $('editBar').innerHTML=dayOff?`<div class="editbar"><span>✎ Editing <b>${new Date(dms(d)).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}</b> — changes go on this day</span><button data-today>Back to today</button></div>`:'';
     const ms=morningStreak(store.daily,store.goals,today), md=morningDone(store.daily,store.goals,d);
-    $('dBanner').innerHTML=`<div class="banner ${md?'done':''}"><div><b style="font-size:18px">${md?'Morning done ✓':'Morning 10'}</b>
+    const all4=ALL4.every(k=>dayMet(store.daily,store.goals,k,d));
+    $('dBanner').innerHTML=`<div class="banner ${md?'done':''} ${popBanner?'pop':''}"><div><b style="font-size:18px">${all4?'All 4 done 🎉':md?'Morning done ✓':'Morning 10'}</b>
       <div class="muted">Morning streak: <b style="color:var(--text)">${ms} day${ms===1?'':'s'}</b> · best ${bestMorning()}</div></div>
-      <div class="items">${['pu','su','st'].map(k=>`<span class="${dayMet(store.daily,store.goals,k,d)?'y':''}">${dayMet(store.daily,store.goals,k,d)?'✓':'○'} ${DAILY_ITEMS.find(x=>x.k===k).name}</span>`).join('')}</div></div>`;
+      <div class="items">${ALL4.map(k=>`<span class="${dayMet(store.daily,store.goals,k,d)?'y':''}">${dayMet(store.daily,store.goals,k,d)?'✓':'○'} ${DAILY_ITEMS.find(x=>x.k===k).name}</span>`).join('')}</div></div>`;
+    popBanner=false;
     $('dCards').innerHTML=DAILY_ITEMS.map(it=>{
       const v=rec[it.k], met=dayMet(store.daily,store.goals,it.k,d);
       const cur=streakOf(store.daily,store.goals,it.k,today), best=bestStreakOf(store.daily,store.goals,it.k);
@@ -1121,9 +1123,19 @@ if (typeof document !== 'undefined') {
     const days=Object.keys(store.daily).filter(d=>morningDone(store.daily,store.goals,d)).sort();
     let best=0,run=0,prev=null; for(const d of days){ run=(prev&&addDays(prev,1)===d)?run+1:1; best=Math.max(best,run); prev=d; } return best;
   }
+  const ALL4=['pu','su','st','cr'];
+  let popBanner=false;
+  function dingFor(d,wasMet){   // a ding when one item completes; ding-ding-ding when all four are done
+    const nowMet=ALL4.map(k=>dayMet(store.daily,store.goals,k,d));
+    const fresh=ALL4.some((k,i)=>nowMet[i]&&!wasMet[i]); if(!fresh) return;
+    if(nowMet.every(Boolean)){ [784,988,1175,1568].forEach((f,i)=>setTimeout(()=>beep(f,i===3?0.5:0.16),i*140)); popBanner=true; }
+    else beep(1046,0.25);
+  }
   function setDaily(k,fn){
     const d=addDays(todayStr(),dayOff), rec=store.daily[d]||(store.daily[d]={});
-    rec[k]=fn(rec[k]); rec._t=Date.now(); (rec._ts ||= {})[k]=rec._t; save(); renderDaily();
+    const was=ALL4.map(x=>dayMet(store.daily,store.goals,x,d));
+    rec[k]=fn(rec[k]); rec._t=Date.now(); (rec._ts ||= {})[k]=rec._t; save();
+    dingFor(d,was); renderDaily();
   }
   const MAXBACK=-730;
   function setDay(o){ dayOff=Math.max(MAXBACK,Math.min(0,o)); renderDaily(); }
@@ -1450,8 +1462,9 @@ if (typeof document !== 'undefined') {
   function finish(){
     P.running=false;
     if(SESSIONS[P.key].daily){
-      const d=todayStr(); const r=(store.daily[d] ||= {}); r.st=true; r._t=Date.now(); (r._ts ||= {}).st=r._t; save();
-      beep(660,0.2); setTimeout(()=>beep(990,0.4),220); say('Stretch done.');
+      const d=todayStr(); const was=ALL4.map(x=>dayMet(store.daily,store.goals,x,d));
+      const r=(store.daily[d] ||= {}); r.st=true; r._t=Date.now(); (r._ts ||= {}).st=r._t; save();
+      say('Stretch done.'); dingFor(d,was);
       showTab('daily'); return;
     }
     const h=store.history[P.key]||{count:0,last:0}; h.count++; h.last=Date.now(); store.history[P.key]=h; save();
