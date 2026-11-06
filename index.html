@@ -33,6 +33,7 @@ h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
 .card h2{margin:0;font-size:20px}
 .card .tag{color:var(--accent);font-weight:600;font-size:14px}
 .card ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px}
+.card .cfoot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
 .card .meta{color:var(--muted);font-size:13px;display:flex;justify-content:space-between}
 .btn{background:var(--accent);color:#111;border:0;border-radius:10px;padding:11px 16px;font-weight:700}
 .btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:500}
@@ -1351,8 +1352,8 @@ if (typeof document !== 'undefined') {
       return `<div class="card ${k===nx?'next':''}">${k===nx?'<span class="badge">UP NEXT</span>':''}
         <div class="tag">${s.tag}</div><h2>${s.name}</h2>
         <ul>${names.map(n=>`<li>${n}</li>`).join('')}</ul>
-        <div class="meta"><span>${Math.round(totalSecs(steps)/60)} min</span><span>${last}</span></div>
-        <button class="btn" data-start="${k}">Start</button></div>`;
+        <div class="cfoot"><div class="meta"><span>${Math.round(totalSecs(steps)/60)} min</span><span>${last}</span></div>
+        <button class="btn" data-start="${k}">Start</button></div></div>`;
     }).join('');
     $('homeQuote').textContent='\u201C'+quote()+'\u201D';
   }
